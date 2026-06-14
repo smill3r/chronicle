@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+api/dist/
+
+# MongoDB dumps
+scraper/dump/
+
+# Claude AI files
+.claude/
+CLAUDE.md
+
+# OS / editor
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Secrets
+.env
+.env.*
