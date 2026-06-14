@@ -1,0 +1,37 @@
+@use '../../styles/variables' as *;
+
+.filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-xs;
+  align-items: center;
+}
+
+.allBtn {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid $color-border;
+  border-radius: 2px;
+  color: $color-text-muted;
+  background: $color-surface;
+
+  &:hover { border-color: $color-accent; color: $color-accent; }
+}
+
+.chip {
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid $color-border;
+  border-radius: 2px;
+  color: $color-text-muted;
+  background: $color-surface;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  &:hover { border-color: $color-accent; }
+
+  &.active {
+    background: $color-accent;
+    border-color: $color-accent;
+    color: #fff;
+  }
+}

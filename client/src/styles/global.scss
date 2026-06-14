@@ -1,0 +1,11 @@
+@use 'variables' as *;
+@use 'reset';
+
+body {
+  background: $color-bg;
+  color: $color-text;
+  font-family: $font-sans;
+  line-height: 1.5;
+}
+
+a:hover { text-decoration: underline; }

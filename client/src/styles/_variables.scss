@@ -1,0 +1,27 @@
+// Typography
+$font-serif: 'Georgia', 'Times New Roman', serif;
+$font-sans: system-ui, -apple-system, sans-serif;
+
+// Color palette — light, editorial
+$color-bg: #faf8f5;
+$color-surface: #ffffff;
+$color-border: #e0dbd4;
+$color-text: #1a1714;
+$color-text-secondary: #3d3a37;
+$color-text-muted: #6b6560;
+$color-accent: #2c5282;
+
+// Spacing
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 40px;
+
+// Responsive
+$breakpoint-mobile: 767px;
+
+// Timeline (legacy v1)
+$timeline-dot-size: 10px;
+$timeline-card-width: 280px;
+$timeline-height: 420px;

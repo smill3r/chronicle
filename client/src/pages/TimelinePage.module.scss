@@ -1,0 +1,108 @@
+@use '../styles/variables' as *;
+
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: $color-bg;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: $color-bg;
+  border-bottom: 1px solid $color-border;
+  padding: $space-md $space-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $space-xs;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: $space-sm $space-md;
+  }
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: $color-text-muted;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: color 150ms;
+
+  &:hover {
+    color: $color-text;
+  }
+}
+
+.eventCount {
+  font-size: 11px;
+  color: $color-text-muted;
+  font-family: monospace;
+}
+
+.title {
+  font-family: $font-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: $color-text;
+  margin: 0;
+  line-height: 1.25;
+
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 18px;
+  }
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: $space-md;
+  margin-top: $space-xs;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: $space-xl;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: $space-xl;
+  align-items: start;
+
+  @media (max-width: $breakpoint-mobile) {
+    grid-template-columns: 1fr;
+    padding: $space-md;
+    gap: 0;
+  }
+}
+
+.main {
+  min-width: 0;
+}
+
+.sentinel {
+  height: 1px;
+}
+
+.stateInline {
+  padding: $space-lg 0;
+  font-size: 13px;
+  color: $color-text-muted;
+}
+
+.state {
+  padding: $space-xl;
+  font-size: 14px;
+  color: $color-text-muted;
+}

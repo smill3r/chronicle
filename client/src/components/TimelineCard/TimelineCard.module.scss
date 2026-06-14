@@ -1,0 +1,134 @@
+@use '../../styles/variables' as *;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: $space-sm;
+  padding: $space-lg;
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: 12px;
+  text-decoration: none;
+  color: $color-text;
+  transition: box-shadow 200ms, border-color 200ms, transform 200ms;
+
+  &:hover {
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.09);
+    border-color: darken($color-border, 8%);
+    transform: translateY(-2px);
+  }
+
+  &.featured {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: $space-xl;
+    padding: $space-xl;
+    background: $color-text;
+    color: $color-bg;
+    border-color: $color-text;
+
+    .title {
+      font-size: 28px;
+      color: $color-bg;
+    }
+
+    .range, .count, .spanLabel {
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .tag {
+      background: rgba(255, 255, 255, 0.12) !important;
+      color: rgba(255, 255, 255, 0.75) !important;
+    }
+
+    .arrow {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    @media (max-width: $breakpoint-mobile) {
+      flex-direction: column;
+      gap: $space-md;
+    }
+  }
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-sm;
+}
+
+.range {
+  font-size: 11px;
+  font-family: monospace;
+  color: $color-text-muted;
+}
+
+.count {
+  font-size: 11px;
+  color: $color-text-muted;
+}
+
+.title {
+  font-family: $font-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+  flex: 1;
+}
+
+.bar {
+  display: flex;
+  height: 4px;
+  border-radius: 2px;
+  overflow: hidden;
+  gap: 1px;
+  margin: 4px 0;
+}
+
+.barSegment {
+  border-radius: 1px;
+  min-width: 4px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: darken($color-bg, 3%);
+  color: $color-text-muted;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: $space-xs;
+}
+
+.spanLabel {
+  font-size: 11px;
+  color: $color-text-muted;
+}
+
+.arrow {
+  font-size: 16px;
+  color: $color-text-muted;
+  transition: transform 200ms;
+
+  .card:hover & {
+    transform: translateX(3px);
+  }
+}

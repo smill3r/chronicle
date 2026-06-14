@@ -1,0 +1,22 @@
+@use '../../styles/variables' as *;
+
+.wrapper { position: relative; }
+
+.input {
+  font-size: 14px;
+  padding: 6px 12px;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  background: $color-surface;
+  color: $color-text;
+  width: 240px;
+  outline: none;
+  transition: border-color 150ms;
+
+  &:focus { border-color: $color-accent; }
+  &::placeholder { color: $color-text-muted; }
+
+  @media (max-width: $breakpoint-mobile) {
+    width: 100%;
+  }
+}

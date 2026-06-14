@@ -1,0 +1,136 @@
+@use '../../styles/variables' as *;
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.empty {
+  padding: $space-xl;
+  text-align: center;
+  color: $color-text-muted;
+  font-size: 14px;
+}
+
+.group {
+  margin-bottom: $space-xl;
+}
+
+.eraHeading {
+  font-family: $font-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  margin: 0 0 $space-sm;
+  padding: $space-sm 0;
+  border-bottom: 1px solid $color-border;
+  position: sticky;
+  top: 60px; // below the sticky page header
+  background: $color-bg;
+  z-index: 1;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: $space-md;
+  padding: $space-md 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: background 120ms, opacity 200ms;
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.025);
+  }
+
+  &.rowSelected {
+    background: rgba(0, 0, 0, 0.04);
+    outline: 1.5px solid $color-accent;
+    outline-offset: -1px;
+  }
+
+  &.rowDimmed {
+    opacity: 0.22;
+    pointer-events: none;
+  }
+
+  @media (max-width: 767px) {
+    grid-template-columns: 72px 1fr;
+    gap: $space-sm;
+    padding: $space-sm 0;
+  }
+}
+
+.date {
+  font-size: 11px;
+  font-family: monospace;
+  color: $color-text-muted;
+  padding-top: 3px;
+  flex-shrink: 0;
+  text-align: right;
+  padding-right: $space-sm;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.title {
+  font-family: $font-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: $color-text;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.desc {
+  font-size: 13px;
+  color: $color-text-secondary;
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.pill {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.location {
+  font-size: 11px;
+  color: $color-text-muted;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  &::before {
+    content: '\eb3b'; // tabler map-pin
+    font-family: 'tabler-icons';
+    font-style: normal;
+    font-size: 12px;
+    line-height: 1;
+  }
+}

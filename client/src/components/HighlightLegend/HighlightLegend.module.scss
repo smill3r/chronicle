@@ -1,0 +1,72 @@
+@use '../../styles/variables' as *;
+
+.legend {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-md;
+  margin-bottom: $space-lg;
+  padding-bottom: $space-md;
+  border-bottom: 1px solid $color-border;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    gap: $space-xs;
+  }
+}
+
+.label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  white-space: nowrap;
+  padding-top: 5px;
+}
+
+.items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  @media (max-width: 767px) {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid $color-border;
+  color: $color-text-muted;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 150ms, color 150ms, background 150ms;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $color-text-muted;
+    color: $color-text;
+  }
+
+  &.active {
+    border-color: $color-text;
+    color: $color-text;
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
