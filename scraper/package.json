@@ -1,0 +1,21 @@
+{
+  "name": "chronicle-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "discover": "node index.js discover",
+    "fetch": "node index.js fetch",
+    "parse": "node index.js parse",
+    "normalize": "node index.js normalize"
+  },
+  "dependencies": {
+    "wtf_wikipedia": "^10.3.0",
+    "cheerio": "^1.0.0",
+    "ollama": "^0.5.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.23.0",
+    "p-limit": "^6.1.0",
+    "mongoose": "^8.4.0"
+  }
+}
