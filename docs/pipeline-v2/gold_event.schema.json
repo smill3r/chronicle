@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chronicle/pipeline-v2/gold_event.schema.json",
+  "title": "Chronicle Gold Event",
+  "description": "One hand-labeled event used to evaluate the pipeline. Stored as a JSONL line per event. The gold set should be ~300-500 events stratified across articles and eras (esp. the BC/AD boundary and multi-date 'Ussher-type' sentences).",
+  "type": "object",
+  "required": [
+    "id",
+    "source",
+    "true_year",
+    "true_precision",
+    "true_categories",
+    "labeler"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable id, e.g. '<revision_id>:<bullet_index>'."
+    },
+    "source": {
+      "type": "object",
+      "required": ["article_title", "revision_id", "section_path", "bullet_text"],
+      "additionalProperties": false,
+      "properties": {
+        "article_title": { "type": "string" },
+        "revision_id": { "type": "integer", "description": "Frozen revision the bullet was taken from — makes the gold set reproducible." },
+        "section_path": { "type": "array", "items": { "type": "string" }, "description": "Ancestor headings, e.g. [\"17th century\"]." },
+        "bullet_text": { "type": "string", "description": "Verbatim source bullet." }
+      }
+    },
+    "true_year": {
+      "type": "integer",
+      "description": "Signed year the event ACTUALLY occurred (negative = BC). For Ussher's bullet this is 1650, not -4004.",
+      "minimum": -4000000,
+      "maximum": 2100
+    },
+    "true_precision": {
+      "type": "string",
+      "enum": ["year", "month", "day", "circa", "range", "unknown"]
+    },
+    "referenced_years": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "description": "Other dates mentioned in the bullet that are NOT the event anchor (e.g. [-4004] for Ussher). Used to score temporal grounding."
+    },
+    "true_categories": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["War","Politics","Science","Religion","Art & Culture","Exploration","Economics","Law","Philosophy","Technology","Natural Event","Society"]
+      },
+      "minItems": 0
+    },
+    "true_wikilink": {
+      "type": "string",
+      "description": "Canonical Wikipedia article title for the event's primary subject; empty string if none applies."
+    },
+    "is_event": {
+      "type": "boolean",
+      "default": true,
+      "description": "False if the bullet is not actually an event (e.g. a stray See-also/reference line). Used to score junk-filtering."
+    },
+    "is_multi_date": {
+      "type": "boolean",
+      "default": false,
+      "description": "True if the bullet contains more than one date (the grounding-hard slice)."
+    },
+    "labeler": { "type": "string", "description": "Who labeled it (for inter-annotator agreement)." },
+    "notes": { "type": "string" }
+  },
+  "examples": [
+    {
+      "id": "1085461024:42",
+      "source": {
+        "article_title": "Timeline of Christianity",
+        "revision_id": 1085461024,
+        "section_path": ["17th century"],
+        "bullet_text": "1650 Bishop James Ussher calculates date of creation as October 23, 4004 BC"
+      },
+      "true_year": 1650,
+      "true_precision": "year",
+      "referenced_years": [-4004],
+      "true_categories": ["Religion", "Science"],
+      "true_wikilink": "Ussher chronology",
+      "is_event": true,
+      "is_multi_date": true,
+      "labeler": "jsmiller",
+      "notes": "Canonical grounding case: event occurred in 1650; 4004 BC is the content of the calculation."
+    }
+  ]
+}
