@@ -1,8 +1,8 @@
-import type { CSSProperties } from 'react';
-import type { HistoricalEvent } from '../../types';
-import { CATEGORY_COLORS } from '../../types';
-import { getEraKey } from '../../utils/getEraKey';
-import styles from './EventList.module.scss';
+import type { CSSProperties } from "react";
+import type { HistoricalEvent } from "../../types";
+import { CATEGORY_COLORS } from "../../types";
+import { getEraKey } from "../../utils/getEraKey";
+import styles from "./EventList.module.scss";
 
 interface EventGroup {
   era: string;
@@ -31,7 +31,12 @@ interface Props {
   onSelect: (ev: HistoricalEvent) => void;
 }
 
-export default function EventList({ events, span, selectedEvent, onSelect }: Props) {
+export default function EventList({
+  events,
+  span,
+  selectedEvent,
+  onSelect,
+}: Props) {
   if (events.length === 0) {
     return <div className={styles.empty}>No events found.</div>;
   }
@@ -49,16 +54,20 @@ export default function EventList({ events, span, selectedEvent, onSelect }: Pro
           <div className={styles.events}>
             {groupEvs.map((ev) => {
               const isSelected = selectedEvent?._id === ev._id;
-              const dotColor = CATEGORY_COLORS[ev.category[0]]?.dot ?? '#b8b2aa';
+              const dotColor =
+                CATEGORY_COLORS[ev.category[0]]?.dot ?? "#b8b2aa";
               return (
                 <div
                   key={ev._id}
-                  className={[styles.row, isSelected ? styles.rowSelected : ''].join(' ')}
-                  style={{ '--dot': dotColor } as CSSProperties}
+                  className={[
+                    styles.row,
+                    isSelected ? styles.rowSelected : "",
+                  ].join(" ")}
+                  style={{ "--dot": dotColor } as CSSProperties}
                   onClick={() => onSelect(ev)}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === 'Enter' && onSelect(ev)}
+                  onKeyDown={(e) => e.key === "Enter" && onSelect(ev)}
                   aria-pressed={isSelected}
                 >
                   <div className={styles.date}>{ev.yearDisplay}</div>
@@ -76,15 +85,23 @@ export default function EventList({ events, span, selectedEvent, onSelect }: Pro
                           key={cat}
                           className={styles.pill}
                           style={{
-                            background: CATEGORY_COLORS[cat]?.bg ?? '#f0f0f0',
-                            color: CATEGORY_COLORS[cat]?.text ?? '#444',
+                            background: CATEGORY_COLORS[cat]?.bg ?? "#f0f0f0",
+                            color: CATEGORY_COLORS[cat]?.text ?? "#444",
                           }}
                         >
                           {cat}
                         </span>
                       ))}
                       {ev.location.length > 0 && (
-                        <span className={styles.location}>{ev.location[0]}</span>
+                        <div className={styles.location}>
+                          <span
+                            className={`ti ti-map-pin ${styles.metaIcon}`}
+                          />
+
+                          <span className={styles.locationName}>
+                            {ev.location[0]}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </div>

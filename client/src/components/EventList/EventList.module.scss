@@ -1,4 +1,4 @@
-@use '../../styles/variables' as *;
+@use "../../styles/variables" as *;
 
 // Shared 3-column grid: [date] [timeline rail] [content]. Era rows and event
 // rows use the same template so the rail line + dots align down the whole list.
@@ -17,7 +17,7 @@ $col-rail-mobile: 24px;
 // Dots and era nodes paint over it (with a background ring) so it reads as a
 // single connected timeline with markers sitting on it.
 .list::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   bottom: 0;
@@ -42,7 +42,9 @@ $col-rail-mobile: 24px;
 .group {
   margin-bottom: $space-lg;
 
-  &:last-child { margin-bottom: 0; }
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 
 // ── Era chapter marker ────────────────────────────────────────────────────────
@@ -64,7 +66,7 @@ $col-rail-mobile: 24px;
   // The era row's opaque background (needed for sticky) would hide the list
   // line — redraw it here, above the background but behind the chapter node.
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     bottom: 0;
@@ -112,7 +114,9 @@ $col-rail-mobile: 24px;
   border-radius: 6px;
   transition: background 120ms;
 
-  &:hover { background: rgba(0, 0, 0, 0.025); }
+  &:hover {
+    background: rgba(0, 0, 0, 0.025);
+  }
 
   &.rowSelected {
     background: rgba(0, 0, 0, 0.04);
@@ -163,7 +167,9 @@ $col-rail-mobile: 24px;
 .rowSelected .dot {
   transform: translate(-50%, -50%) scale(1.35);
   // halo: dot → background gap → thin ring in the event's category colour
-  box-shadow: 0 0 0 3px $color-bg, 0 0 0 5px var(--dot);
+  box-shadow:
+    0 0 0 3px $color-bg,
+    0 0 0 5px var(--dot);
 }
 
 .content {
@@ -212,18 +218,19 @@ $col-rail-mobile: 24px;
 }
 
 .location {
-  font-size: 11px;
-  color: $color-text-muted;
-  padding: 2px 0;
   display: flex;
-  align-items: center;
   gap: 3px;
 
-  &::before {
-    content: '\eb3b'; // tabler map-pin
-    font-family: 'tabler-icons';
-    font-style: normal;
-    font-size: 12px;
-    line-height: 1;
+  & .locationName {
+    font-size: 11px;
+    color: $color-text-muted;
+    padding: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
   }
+}
+
+.metaIcon {
+  font-size: 13px;
 }
