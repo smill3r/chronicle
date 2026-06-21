@@ -23,6 +23,35 @@ export default function SplashPage({ onReady }: Props) {
   const [error, setError] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Track background fetch outcome with refs so closures always see current values
+  const fetchDone = useRef(false);
+  const fetchError = useRef<string | null>(null);
+  const userClicked = useRef(false);
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
+
+  // Start fetching immediately on mount — don't wait for the button click
+  useEffect(() => {
+    api.timelines.list()
+      .then(() => {
+        fetchDone.current = true;
+        if (userClicked.current) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          onReadyRef.current();
+        }
+      })
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? e.message : 'Could not connect to the server';
+        fetchError.current = msg;
+        if (userClicked.current) {
+          if (intervalRef.current) clearInterval(intervalRef.current);
+          setPhase('error');
+          setError(msg);
+        }
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Cycling messages while user waits in loading phase
   useEffect(() => {
     if (phase !== 'loading') return;
     intervalRef.current = setInterval(() => {
@@ -31,16 +60,25 @@ export default function SplashPage({ onReady }: Props) {
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
   }, [phase]);
 
-  const handleEnter = async () => {
+  const handleEnter = () => {
+    userClicked.current = true;
+    if (fetchDone.current) { onReadyRef.current(); return; }
+    if (fetchError.current) { setError(fetchError.current); setPhase('error'); return; }
     setPhase('loading');
-    try {
-      await api.timelines.list();
-      onReady();
-    } catch (e: unknown) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      setPhase('error');
-      setError(e instanceof Error ? e.message : 'Could not connect to the server');
-    }
+  };
+
+  const handleRetry = () => {
+    fetchDone.current = false;
+    fetchError.current = null;
+    userClicked.current = false;
+    setPhase('intro');
+    setError(null);
+    setMsgIndex(0);
+    api.timelines.list()
+      .then(() => { fetchDone.current = true; })
+      .catch((e: unknown) => {
+        fetchError.current = e instanceof Error ? e.message : 'Could not connect to the server';
+      });
   };
 
   return (
@@ -78,10 +116,7 @@ export default function SplashPage({ onReady }: Props) {
         {phase === 'error' && (
           <div className={styles.errorState}>
             <p className={styles.errorMsg}>{error}</p>
-            <button
-              className={styles.cta}
-              onClick={() => { setPhase('intro'); setError(null); setMsgIndex(0); }}
-            >
+            <button className={styles.cta} onClick={handleRetry}>
               Try again
             </button>
           </div>
