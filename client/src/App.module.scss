@@ -1,0 +1,40 @@
+@use './styles/variables' as *;
+
+.scrollTop {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: $color-text;
+  color: $color-surface;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 220ms $ease-out, transform 220ms $ease-out, background 150ms $ease-out;
+
+  &:hover { background: #3a3a3a; }
+
+  @media (max-width: $breakpoint-mobile) {
+    bottom: 70px; // clears the timeline page mobile nav bar
+    right: 16px;
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+  }
+}
+
+.scrollTopVisible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}

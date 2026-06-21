@@ -1,0 +1,6 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="7" fill="#111111"/>
+  <!-- Hourglass silhouette: top cap → converge to neck → diverge to bottom cap -->
+  <path d="M7 5 H25 V7 L18 15.5 V16.5 L25 25 V27 H7 V25 L14 16.5 V15.5 L7 7 Z"
+        fill="white"/>
+</svg>
