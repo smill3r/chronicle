@@ -1,11 +1,9 @@
-@use "../../styles/variables" as *;
+@use '../../styles/variables' as *;
 
-// Shared 3-column grid: [date] [timeline rail] [content]. Era rows and event
-// rows use the same template so the rail line + dots align down the whole list.
-$col-date: 92px;
-$col-rail: 28px;
-$col-date-mobile: 64px;
-$col-rail-mobile: 24px;
+$rail-width: 28px;
+$rail-width-mobile: 24px;
+
+// ── List container ────────────────────────────────────────────────────────────
 
 .list {
   display: flex;
@@ -13,22 +11,20 @@ $col-rail-mobile: 24px;
   position: relative;
 }
 
-// One continuous rail line behind the whole list, centered on the rail column.
-// Dots and era nodes paint over it (with a background ring) so it reads as a
-// single connected timeline with markers sitting on it.
+// Single continuous rail line behind the whole list.
 .list::before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(#{$col-date} + #{$col-rail} / 2);
+  left: calc(#{$rail-width} / 2);
   transform: translateX(-50%);
   width: 2px;
   background: $color-border;
   z-index: 0;
 
   @media (max-width: 767px) {
-    left: calc(#{$col-date-mobile} + #{$col-rail-mobile} / 2);
+    left: calc(#{$rail-width-mobile} / 2);
   }
 }
 
@@ -42,105 +38,144 @@ $col-rail-mobile: 24px;
 .group {
   margin-bottom: $space-lg;
 
-  &:last-child {
-    margin-bottom: 0;
-  }
+  &:last-child { margin-bottom: 0; }
 }
 
-// ── Era chapter marker ────────────────────────────────────────────────────────
+// ── Era headings ──────────────────────────────────────────────────────────────
+
 .eraRow {
   display: grid;
-  grid-template-columns: $col-date $col-rail 1fr;
+  grid-template-columns: $rail-width 1fr;
   align-items: center;
   position: sticky;
-  top: 60px; // below the sticky page header
+  top: 60px;
   background: $color-bg;
   z-index: 2;
   padding: $space-sm 0;
   margin-bottom: $space-xs;
 
   @media (max-width: 767px) {
-    grid-template-columns: $col-date-mobile $col-rail-mobile 1fr;
+    grid-template-columns: $rail-width-mobile 1fr;
   }
 
-  // The era row's opaque background (needed for sticky) would hide the list
-  // line — redraw it here, above the background but behind the chapter node.
+  // Redraw the rail line so it shows through the sticky background.
   &::before {
-    content: "";
+    content: '';
     position: absolute;
     top: 0;
     bottom: 0;
-    left: calc(#{$col-date} + #{$col-rail} / 2);
+    left: calc(#{$rail-width} / 2);
     transform: translateX(-50%);
     width: 2px;
     background: $color-border;
     z-index: 1;
 
     @media (max-width: 767px) {
-      left: calc(#{$col-date-mobile} + #{$col-rail-mobile} / 2);
+      left: calc(#{$rail-width-mobile} / 2);
     }
   }
 }
 
 .eraNode {
-  grid-column: 2;
+  grid-column: 1;
   justify-self: center;
   width: 13px;
   height: 13px;
   border-radius: 50%;
   background: $color-bg;
   border: 2px solid $color-text-muted;
-  box-shadow: 0 0 0 4px $color-bg; // mask the line behind the chapter node
+  box-shadow: 0 0 0 4px $color-bg;
   z-index: 2;
 }
 
 .eraHeading {
-  grid-column: 3;
+  grid-column: 2;
   font-family: $font-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   color: $color-text-muted;
   margin: 0;
+  padding-left: $space-sm;
 }
 
-// ── Event rows ────────────────────────────────────────────────────────────────
-.row {
+// ── Bookend rows (synthetic events) ──────────────────────────────────────────
+
+.bookend {
   display: grid;
-  grid-template-columns: $col-date $col-rail 1fr;
+  grid-template-columns: $rail-width 1fr;
   padding: $space-sm 0;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 120ms;
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.025);
-  }
-
-  &.rowSelected {
-    background: rgba(0, 0, 0, 0.04);
-  }
+  opacity: 0.5;
 
   @media (max-width: 767px) {
-    grid-template-columns: $col-date-mobile $col-rail-mobile 1fr;
+    grid-template-columns: $rail-width-mobile 1fr;
   }
 }
 
-.date {
-  grid-column: 1;
-  font-size: 11px;
-  font-family: monospace;
+.bookendDiamond {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: $color-bg;
+  border: 2px solid $color-text-muted;
+  box-shadow: 0 0 0 3px $color-bg;
+  z-index: 1;
+}
+
+.bookendLabel {
+  grid-column: 2;
+  font-size: 12px;
+  font-style: italic;
   color: $color-text-muted;
-  text-align: right;
-  padding-right: $space-sm;
-  padding-top: 2px;
+  padding-left: $space-sm;
   line-height: 1.4;
 }
 
-// The rail column hosts a dot per event; the line itself is drawn once on .list.
+// ── Event rows ────────────────────────────────────────────────────────────────
+
+.row {
+  display: grid;
+  grid-template-columns: $rail-width 1fr;
+  padding: $space-sm 0;
+  cursor: pointer;
+  border-radius: 6px;
+  // Continuous opacity driven by --focus-val. Opacity is compositor-only
+  // (no reflow), so it never shifts neighbouring rows.
+  opacity: calc(0.1 + var(--focus-val, 0.6) * 0.9);
+  transition:
+    opacity 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    background $duration-fast $ease-out;
+
+  &:hover { background: rgba(0, 0, 0, 0.025); }
+  &.rowSelected { background: rgba(0, 0, 0, 0.04); }
+
+  @media (max-width: 767px) {
+    grid-template-columns: $rail-width-mobile 1fr;
+  }
+}
+
+// ── Dock focus levels (discrete — description show/hide only) ────────────────
+// Pills are NOT toggled here — they stay in layout always to avoid the
+// display:none→flex jump that caused layout shifts on every focus change.
+
+.row[data-focus='3'],
+.row[data-focus='2'] {
+  .desc { display: -webkit-box; }
+}
+
+.row[data-focus='1'],
+.row[data-focus='0'] {
+  .desc { display: none; }
+}
+
+// ── Rail column ───────────────────────────────────────────────────────────────
+
 .rail {
-  grid-column: 2;
+  grid-column: 1;
   position: relative;
   align-self: stretch;
 }
@@ -148,8 +183,9 @@ $col-rail-mobile: 24px;
 .dot {
   position: absolute;
   left: 50%;
-  top: 11px;
-  transform: translate(-50%, -50%);
+  top: 14px;
+  // Continuous dot scale: 0.65 (edge) → 1.35 (centre) via --focus-val
+  transform: translate(-50%, -50%) scale(calc(0.65 + var(--focus-val, 0.5) * 0.7));
   width: 11px;
   height: 11px;
   border-radius: 50%;
@@ -157,55 +193,71 @@ $col-rail-mobile: 24px;
   border: 2.5px solid $color-bg;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
   z-index: 1;
-  transition: transform 120ms ease;
+  transition: transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .row:hover .dot {
-  transform: translate(-50%, -50%) scale(1.25);
+  transform: translate(-50%, -50%) scale(1.3);
 }
 
 .rowSelected .dot {
-  transform: translate(-50%, -50%) scale(1.35);
-  // halo: dot → background gap → thin ring in the event's category colour
+  transform: translate(-50%, -50%) scale(1.4);
   box-shadow:
     0 0 0 3px $color-bg,
     0 0 0 5px var(--dot);
 }
 
+// ── Content column ────────────────────────────────────────────────────────────
+
 .content {
-  grid-column: 3;
+  grid-column: 2;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
   min-width: 0;
-  padding-left: $space-xs;
+  padding-left: $space-sm;
+}
+
+.yearDisplay {
+  font-size: 10px;
+  font-family: monospace;
+  color: $color-text-muted;
+  letter-spacing: 0.03em;
 }
 
 .title {
   font-family: $font-serif;
+  // Fixed font-size: zoom is applied via transform so layout never reflows.
+  // scale() range: 0.88 (edge) → 1.26 (centre) ≈ 13 px → 19 px equivalent.
   font-size: 15px;
   font-weight: 600;
   color: $color-text;
   margin: 0;
-  line-height: 1.35;
+  line-height: 1.3;
+  transform: scale(calc(0.88 + var(--focus-val, 0.5) * 0.38));
+  transform-origin: left center;
+  transition: transform 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .desc {
-  font-size: 13px;
+  font-size: 12px;
   color: $color-text-secondary;
   line-height: 1.5;
   margin: 0;
-  display: -webkit-box;
+  display: none; // shown at focus levels 2 and 3 above
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .pills {
-  display: flex;
+  display: flex; // always in layout — opacity-only fade avoids layout shifts
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 2px;
+  // Fade in above focus-val ~0.3, fully visible by ~0.55
+  opacity: clamp(0, calc((var(--focus-val, 0.5) - 0.3) * 4), 1);
+  transition: opacity 200ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .pill {
@@ -218,19 +270,10 @@ $col-rail-mobile: 24px;
 }
 
 .location {
-  display: flex;
+  display: inline-flex;
+  align-items: center;
   gap: 3px;
-
-  & .locationName {
-    font-size: 11px;
-    color: $color-text-muted;
-    padding: 2px 0;
-    display: flex;
-    align-items: center;
-    gap: 3px;
-  }
-}
-
-.metaIcon {
-  font-size: 13px;
+  font-size: 10px;
+  color: $color-text-muted;
+  padding: 2px 0;
 }

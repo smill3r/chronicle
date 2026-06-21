@@ -1,32 +1,49 @@
 @use '../styles/variables' as *;
 
+$topbar-height: 52px;
+$left-col-width: 64px;
+$right-col-width: 360px;
+$mobile-nav-height: 56px;
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+
 .page {
-  display: flex;
-  flex-direction: column;
   min-height: 100vh;
   background: $color-bg;
-}
+  animation: fadeIn $duration-base $ease-out both;
 
-.header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: $color-bg;
-  border-bottom: 1px solid $color-border;
-  padding: $space-md $space-xl;
-  display: flex;
-  flex-direction: column;
-  gap: $space-xs;
-
+  // Bottom padding on mobile so content isn't hidden behind the mobileNav bar.
   @media (max-width: $breakpoint-mobile) {
-    padding: $space-sm $space-md;
+    padding-bottom: $mobile-nav-height;
   }
 }
 
-.headerTop {
+.state {
+  padding: $space-xl;
+  font-size: 14px;
+  color: $color-text-muted;
+}
+
+// ── Top bar ───────────────────────────────────────────────────────────────────
+
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: $topbar-height;
+  background: rgba($color-surface, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid $color-border;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: $space-md;
+  padding: 0 $space-lg;
+  overflow: hidden;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: 0 $space-md;
+    gap: $space-sm;
+  }
 }
 
 .back {
@@ -34,13 +51,29 @@
   align-items: center;
   gap: 5px;
   font-size: 12px;
+  font-weight: 500;
   color: $color-text-muted;
   text-decoration: none;
-  letter-spacing: 0.01em;
-  transition: color 150ms;
+  flex-shrink: 0;
+  transition: color $duration-fast;
 
-  &:hover {
-    color: $color-text;
+  &:hover { color: $color-text; }
+}
+
+.pageTitle {
+  font-family: $font-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: $color-text;
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+
+  @media (max-width: $breakpoint-mobile) {
+    font-size: 15px;
   }
 }
 
@@ -48,26 +81,152 @@
   font-size: 11px;
   color: $color-text-muted;
   font-family: monospace;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
 }
 
-.title {
-  font-family: $font-serif;
-  font-size: 22px;
-  font-weight: 700;
-  color: $color-text;
-  margin: 0;
-  line-height: 1.25;
+// ── Three-column body ─────────────────────────────────────────────────────────
+
+.body {
+  display: grid;
+  grid-template-columns: $left-col-width 1fr $right-col-width;
+  max-width: 1440px;
+  margin: 0 auto;
+  align-items: start;
 
   @media (max-width: $breakpoint-mobile) {
-    font-size: 18px;
+    grid-template-columns: 1fr;
   }
 }
 
-.controls {
+// ── Left column (desktop only) ────────────────────────────────────────────────
+
+.leftCol {
+  position: sticky;
+  top: $topbar-height;
+  height: calc(100vh - #{$topbar-height});
+  border-right: 0.5px solid $color-border;
+  overflow: hidden;
+
+  // Hidden on mobile; the mobileNav bar takes its place.
+  @media (max-width: $breakpoint-mobile) {
+    display: none;
+  }
+}
+
+.yearIndicatorWrap {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.yearNavWrap {
+  position: absolute;
+  top: 58%;
+  left: 0;
+  right: 0;
+  max-height: 38vh;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  // Fade-out at bottom so the nav doesn't look clipped.
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+// ── Center column ─────────────────────────────────────────────────────────────
+
+.centerCol {
+  min-width: 0;
+  padding: $space-lg $space-xl;
+  border-right: 0.5px solid $color-border;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: $space-md;
+    border-right: none;
+  }
+}
+
+// ── Editorial intro ───────────────────────────────────────────────────────────
+
+.intro {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: $space-xl;
+  align-items: start;
+  margin-bottom: $space-lg;
+  padding-bottom: $space-lg;
+  border-bottom: 1px solid $color-border;
+  animation: fadeInUp $duration-slow $ease-out both;
+
+  @media (max-width: $breakpoint-mobile) {
+    grid-template-columns: 1fr;
+    gap: $space-md;
+  }
+}
+
+.introText { min-width: 0; }
+
+.kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $color-accent;
+  margin: 0 0 $space-sm;
+}
+
+.introDesc {
+  font-family: $font-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: $color-text-secondary;
+  margin: 0;
+}
+
+.introMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-sm;
+  margin-top: $space-md;
+  font-size: 12px;
+  color: $color-text-muted;
+  font-variant-numeric: tabular-nums;
+}
+
+.introLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: $color-accent;
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
+}
+
+.introFigure { margin: 0; }
+
+.introHero {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 3px;
+}
+
+// ── Search + filter chips ─────────────────────────────────────────────────────
+
+.searchRow {
   display: flex;
   align-items: center;
-  gap: $space-md;
-  margin-top: $space-xs;
+  flex-wrap: wrap;
+  gap: $space-sm;
+  margin: $space-md 0 $space-sm;
 }
 
 .activeFilters {
@@ -99,11 +258,9 @@
   font-size: 10px;
   color: inherit;
   opacity: 0.7;
-  transition: opacity 120ms;
+  transition: opacity $duration-fast;
 
-  &:hover {
-    opacity: 1;
-  }
+  &:hover { opacity: 1; }
 }
 
 .clearAll {
@@ -114,111 +271,14 @@
   cursor: pointer;
   padding: 3px 6px;
   text-decoration: underline;
-  transition: color 120ms;
+  transition: color $duration-fast;
 
-  &:hover {
-    color: $color-text;
-  }
+  &:hover { color: $color-text; }
 }
 
-.body {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: $space-xl;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: $space-xl;
-  align-items: start;
+// ── Scroll + loading states ───────────────────────────────────────────────────
 
-  @media (max-width: $breakpoint-mobile) {
-    grid-template-columns: 1fr;
-    padding: $space-md;
-    gap: 0;
-  }
-}
-
-.main {
-  min-width: 0;
-}
-
-// ── "About this topic" — editorial lead ───────────────────────────────────────
-.intro {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: $space-xl;
-  align-items: start;
-  margin-bottom: $space-lg;
-  padding-bottom: $space-lg;
-  border-bottom: 1px solid $color-border;
-
-  @media (max-width: $breakpoint-mobile) {
-    grid-template-columns: 1fr;
-    gap: $space-md;
-  }
-}
-
-.introText {
-  min-width: 0;
-}
-
-.kicker {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: $color-accent;
-  margin: 0 0 $space-sm;
-}
-
-.lead {
-  font-family: $font-serif;
-  font-size: 16px;
-  line-height: 1.7;
-  color: $color-text-secondary;
-  margin: 0;
-}
-
-.introFigure {
-  margin: 0;
-
-  @media (max-width: $breakpoint-mobile) {
-    order: -1; // image leads on narrow screens
-  }
-}
-
-.introHero {
-  width: 100%;
-  height: auto; // keep the image's natural aspect ratio
-  display: block;
-  border-radius: 3px;
-}
-
-.introMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: $space-sm;
-  margin-top: $space-md;
-  font-size: 12px;
-  color: $color-text-muted;
-  font-variant-numeric: tabular-nums;
-}
-
-.introLink {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 600;
-  color: $color-accent;
-  text-decoration: none;
-
-  &:hover { text-decoration: underline; }
-}
-
-.sentinel {
-  height: 1px;
-}
+.sentinel { height: 1px; }
 
 .stateInline {
   padding: $space-lg 0;
@@ -226,8 +286,110 @@
   color: $color-text-muted;
 }
 
-.state {
-  padding: $space-xl;
-  font-size: 14px;
-  color: $color-text-muted;
+// ── Right column ──────────────────────────────────────────────────────────────
+
+.rightCol {
+  position: sticky;
+  top: $topbar-height;
+  height: calc(100vh - #{$topbar-height});
+  overflow-y: auto;
+
+  // On mobile EventDetailSheet handles its own position:fixed layout.
+  // This wrapper needs to stay in the DOM for the sheet to mount.
+  @media (max-width: $breakpoint-mobile) {
+    position: static;
+    height: 0;
+    overflow: visible;
+  }
+}
+
+// ── Mobile navigation bar ─────────────────────────────────────────────────────
+// Replaces the hidden left column on small screens.
+// Shows the live year on the left and a horizontal scrollable era strip on the right.
+
+.mobileNav {
+  display: none;
+
+  @media (max-width: $breakpoint-mobile) {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    height: $mobile-nav-height;
+    background: rgba($color-surface, 0.95);
+    backdrop-filter: blur(8px);
+    border-top: 1px solid $color-border;
+    padding: 0 $space-md;
+    gap: $space-md;
+  }
+}
+
+.mobileYear {
+  flex-shrink: 0;
+  // Override the vertical writing-mode from YearIndicator for horizontal display.
+  :global(.#{''}) & { } // scoping trick — see below
+
+  // YearIndicator uses writing-mode:vertical-lr; we need horizontal here.
+  // We reset that via a wrapper transform trick: keep the number readable,
+  // just don't rotate it. The yearEnter animation still fires on year change.
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+
+  // The YearIndicator .wrap has position:sticky which doesn't apply here,
+  // and .value has writing-mode:vertical-lr. We override those just for mobile.
+  [class*='wrap'] {
+    position: static;
+    transform: none;
+    flex-direction: row;
+    gap: 6px;
+  }
+
+  // The .rotated wrapper has transform:rotate(180deg) — must reset it or the
+  // horizontal text inside renders upside down.
+  [class*='rotated'] {
+    writing-mode: horizontal-tb;
+    transform: none;
+    overflow: visible;
+  }
+
+  [class*='value'] {
+    writing-mode: horizontal-tb;
+    transform: none;
+    font-size: 14px;
+    letter-spacing: 0;
+  }
+
+  [class*='label'] {
+    display: none; // hide the "year" label text on mobile — space is tight
+  }
+}
+
+.mobileEraStrip {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  // Hide scrollbar but keep scrollability
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+
+  // Override YearNav's vertical flex to horizontal for the strip.
+  [class*='nav'] {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0;
+    padding: 0;
+    white-space: nowrap;
+  }
+
+  [class*='item'] {
+    font-size: 9px;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
 }

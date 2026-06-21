@@ -1,65 +1,169 @@
 @use '../styles/variables' as *;
 
+// ── Shared stagger animation ───────────────────────────────────────────────────
+%card-base {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  animation: fadeInUp $duration-slow $ease-out both;
+  animation-delay: var(--delay, 0ms);
+}
+
+// ── Page shell ────────────────────────────────────────────────────────────────
+
 .page {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: $space-xl $space-lg;
+  min-height: 100vh;
+  padding: 0 44px;
 
   @media (max-width: $breakpoint-mobile) {
-    padding: $space-lg $space-md;
+    padding: 0 $space-lg;
   }
 }
 
-.hero {
-  margin-bottom: $space-xl;
-  padding-bottom: $space-xl;
-  border-bottom: 1px solid $color-border;
+.state {
+  padding: $space-xl;
+  color: $color-text-muted;
+  font-size: 14px;
 }
 
-.heroText {
-  max-width: 600px;
+// ── Shared card elements ──────────────────────────────────────────────────────
+
+.catBar {
+  width: 32px;
+  height: 3px;
+  margin-bottom: $space-sm;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: $color-text-muted;
+  margin-bottom: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.metaRange, .metaCount { color: $color-text-muted; }
+.metaSep { color: $color-border; }
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: $space-sm;
+}
+
+.pill {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+// ── Masthead ──────────────────────────────────────────────────────────────────
+
+.masthead {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $space-xl;
+  padding: 64px 0 48px;
+  border-bottom: 3px solid $color-text;
+  animation: fadeIn $duration-base $ease-out both;
+
+  @media (max-width: $breakpoint-mobile) {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 40px 0 32px;
+  }
+}
+
+.mastheadLeft { flex: 1; }
+.mastheadRight { flex-shrink: 0; }
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  margin: 0 0 $space-md;
 }
 
 .wordmark {
   font-family: $font-serif;
-  font-size: clamp(48px, 8vw, 80px);
+  font-size: clamp(52px, 9vw, 80px);
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
   color: $color-text;
-  margin: 0 0 $space-md;
+  margin: 0 0 $space-lg;
 }
 
 .tagline {
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: $color-text-secondary;
+  max-width: 460px;
+  margin: 0 0 $space-xl;
+}
+
+.mastheadStats {
+  display: flex;
+  gap: $space-xl;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statNum {
+  font-family: $font-serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: $color-text;
+}
+
+.statLabel {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: $color-text-muted;
-  line-height: 1.6;
-  margin: 0;
 }
 
 .discoverCta {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  margin-top: $space-md;
-  font-size: 14px;
-  font-weight: 600;
-  color: $color-surface;
+  padding: 12px 24px;
   background: $color-text;
+  color: $color-surface;
   border-radius: 10px;
-  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
   text-decoration: none;
-  transition: transform 120ms ease, background 120ms ease;
+  transition: opacity $duration-fast $ease-out;
 
-  &:hover { background: $color-accent; transform: translateY(-1px); }
-  &:active { transform: translateY(0); }
+  &:hover { opacity: 0.8; text-decoration: none; }
 }
 
-.gridHeader {
+// ── Sort controls ─────────────────────────────────────────────────────────────
+
+.controls {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: $space-md;
+  padding: $space-lg 0 $space-md;
 
   @media (max-width: $breakpoint-mobile) {
     flex-direction: column;
@@ -68,15 +172,15 @@
   }
 }
 
-.gridLabel {
+.controlsLabel {
   font-size: 10px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $color-text-muted;
 }
 
-.sortControls {
+.sortGroup {
   display: flex;
   gap: 2px;
   background: darken($color-bg, 3%);
@@ -93,34 +197,158 @@
   background: transparent;
   color: $color-text-muted;
   cursor: pointer;
-  transition: background 120ms, color 120ms;
+  transition: background $duration-fast, color $duration-fast;
   white-space: nowrap;
 
-  &:hover {
-    color: $color-text;
-  }
-
-  &.sortActive {
-    background: $color-surface;
-    color: $color-text;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  }
+  &:hover { color: $color-text; }
 }
 
-.grid {
+.sortActive {
+  background: $color-surface;
+  color: $color-text;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+// ── Content area ──────────────────────────────────────────────────────────────
+
+.content {
+  padding-bottom: 80px;
+}
+
+// ── Lead card ─────────────────────────────────────────────────────────────────
+// Full-width, two-column: large editorial text left, image right.
+
+.lead {
+  @extend %card-base;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: $space-lg;
+  grid-template-columns: 1fr 280px;
+  gap: 0;
+  border-top: 1px solid $color-border;
+  border-bottom: 1px solid $color-border;
+  margin-bottom: 56px;
+  min-height: 280px;
+  overflow: hidden;
+
+  &:hover .leadTitle { text-decoration: underline; text-underline-offset: 4px; }
 
   @media (max-width: $breakpoint-mobile) {
     grid-template-columns: 1fr;
-    gap: $space-md;
+    min-height: 0;
+    margin-bottom: $space-xl;
   }
 }
 
-.state {
-  padding: $space-xl;
-  color: $color-text-muted;
+.leadText {
+  padding: 36px 40px 36px 0;
+  display: flex;
+  flex-direction: column;
+
+  @media (max-width: $breakpoint-mobile) {
+    padding: $space-lg 0 $space-md;
+  }
+}
+
+.leadTitle {
+  font-family: $font-serif;
+  font-size: clamp(36px, 4.5vw, 52px);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.025em;
+  color: $color-text;
+  margin: 4px 0 $space-md;
+  flex: 1;
+}
+
+.leadDesc {
   font-size: 14px;
+  line-height: 1.7;
+  color: $color-text-secondary;
+  margin: 0 0 $space-md;
+}
+
+.leadImageWrap {
+  overflow: hidden;
+  background: $color-border;
+
+  @media (max-width: $breakpoint-mobile) {
+    height: 180px;
+    order: -1;
+  }
+}
+
+.leadImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  // Subtle scale on parent hover
+  transition: transform 400ms $ease-out;
+
+  .lead:hover & { transform: scale(1.03); }
+}
+
+// ── Main grid ─────────────────────────────────────────────────────────────────
+// Responsive: 2 columns on tablet, 3 columns on desktop.
+// Generous gap and internal padding create the negative space.
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 48px 40px;
+  margin-bottom: 56px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px 32px;
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    grid-template-columns: 1fr;
+    gap: $space-xl;
+    margin-bottom: $space-xl;
+  }
+}
+
+.gridCard {
+  @extend %card-base;
+
+  &:hover .gridTitle { text-decoration: underline; text-underline-offset: 3px; }
+}
+
+.gridImageWrap {
+  height: 160px;
+  overflow: hidden;
+  background: $color-border;
+  border-radius: 3px;
+  margin-bottom: $space-lg;
+}
+
+.gridImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 350ms $ease-out;
+
+  .gridCard:hover & { transform: scale(1.04); }
+}
+
+.gridBody { }
+
+.gridTitle {
+  font-family: $font-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  color: $color-text;
+  margin: 4px 0 $space-xs;
+}
+
+.gridDeck {
+  font-size: 12px;
+  line-height: 1.6;
+  color: $color-text-secondary;
+  margin: 0;
 }

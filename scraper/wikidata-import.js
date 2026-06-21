@@ -31,10 +31,16 @@ const WDQS = 'https://query.wikidata.org/sparql'
 const UA = config.wikipedia.userAgent // reuse the contact UA — WDQS wants one too
 
 // ── Topic recipes ────────────────────────────────────────────────────────────
-// Each topic is a "scoping recipe": how to select its events out of Wikidata.
-// The PoC ships the `part-of` recipe (the regime the coverage matrix showed is
-// Wikidata-native). `qid` is the root item; events ≤2 `part of` hops below it
-// with a P585 point-in-time are pulled.
+// Each topic entry carries a `recipe` field (defaults to 'conflict') that tells
+// buildQuery which SPARQL scope clause to use:
+//
+//   'conflict'  (default) — events linked via P361 (part of, ≤2 hops) OR P607
+//               (conflict). Best for wars, revolutions, and discrete conflicts.
+//
+//   'country'   — events where wdt:P17 (country) = the root QID. Best for
+//               empires, dynasties, and sovereign states whose battles/events
+//               are tagged by the state they occurred under rather than by a
+//               single conflict.
 const TOPICS = {
   'world-war-i': {
     qid: 'Q361',
@@ -47,6 +53,7 @@ const TOPICS = {
     sourceArticle: 'Timeline of the Cold War',
     sourceUrl: 'https://en.wikipedia.org/wiki/Timeline_of_the_Cold_War',
     defaultCategory: 'Politics',
+    yearEnd: 1991, // Soviet dissolution; post-91 P607 links are proxy conflicts, not Cold War proper
   },
   'napoleonic-era': {
     qid: 'Q78994', // Napoleonic Wars
@@ -72,6 +79,88 @@ const TOPICS = {
     sourceUrl: 'https://en.wikipedia.org/wiki/Mexican_War_of_Independence',
     defaultCategory: 'War',
   },
+  'world-war-ii': {
+    qid: 'Q362', // World War II
+    sourceArticle: 'Timeline of World War II',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Timeline_of_World_War_II',
+    defaultCategory: 'War',
+  },
+  'american-civil-war': {
+    qid: 'Q8676', // American Civil War
+    sourceArticle: 'Timeline of the American Civil War',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Timeline_of_the_American_Civil_War',
+    defaultCategory: 'War',
+  },
+  'vietnam-war': {
+    qid: 'Q8740', // Vietnam War
+    sourceArticle: 'Timeline of the Vietnam War',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Timeline_of_the_Vietnam_War',
+    defaultCategory: 'War',
+  },
+  'second-sino-japanese-war': {
+    qid: 'Q170314', // Second Sino-Japanese War
+    sourceArticle: 'Timeline of the Second Sino-Japanese War',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Second_Sino-Japanese_War',
+    defaultCategory: 'War',
+  },
+  'korean-war': {
+    qid: 'Q8663', // Korean War
+    sourceArticle: 'Timeline of the Korean War',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Korean_War',
+    defaultCategory: 'War',
+  },
+  'spanish-civil-war': {
+    qid: 'Q10859', // Spanish Civil War
+    sourceArticle: 'Timeline of the Spanish Civil War',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Spanish_Civil_War',
+    defaultCategory: 'War',
+  },
+  'haitian-revolution': {
+    qid: 'Q689128', // Haitian Revolution
+    sourceArticle: 'Timeline of the Haitian Revolution',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Haitian_Revolution',
+    defaultCategory: 'Politics',
+  },
+  'yugoslav-wars': {
+    qid: 'Q242352', // Yugoslav Wars
+    sourceArticle: 'Timeline of the Yugoslav Wars',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Yugoslav_Wars',
+    defaultCategory: 'War',
+  },
+  'the-troubles': {
+    qid: 'Q815436', // The Troubles (Northern Ireland)
+    sourceArticle: 'Timeline of the Troubles',
+    sourceUrl: 'https://en.wikipedia.org/wiki/The_Troubles',
+    defaultCategory: 'War',
+  },
+  'byzantine-empire': {
+    qid: 'Q12544',
+    recipe: 'hybrid', // P17 alone is too sparse; add P361 scope to catch battles in Byzantine wars
+    sourceArticle: 'Timeline of the Byzantine Empire',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Byzantine_Empire',
+    defaultCategory: 'War',
+  },
+  'ottoman-empire': {
+    qid: 'Q12560',
+    recipe: 'country',
+    sourceArticle: 'Timeline of the Ottoman Empire',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Ottoman_Empire',
+    defaultCategory: 'War',
+  },
+  'roman-empire': {
+    qid: 'Q2277',
+    recipe: 'hybrid', // P17 alone yields ~36 events for 500 years; add P361 to catch battles in Roman wars
+    sourceArticle: 'Timeline of the Roman Empire',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Roman_Empire',
+    defaultCategory: 'War',
+  },
+  'roman-republic': {
+    qid: 'Q17167',
+    recipe: 'hybrid', // same sparse-P17 problem as Roman Empire
+    sourceArticle: 'Timeline of the Roman Republic',
+    sourceUrl: 'https://en.wikipedia.org/wiki/Roman_Republic',
+    defaultCategory: 'Politics',
+  },
 }
 
 // ── instance-of (P31) label → Chronicle category ─────────────────────────────
@@ -84,8 +173,14 @@ const CATEGORY_RULES = [
   [/election|referendum|plebiscite/i, 'Politics'],
   [/law|act\b|decree|legislation/i, 'Law'],
   [/genocide|massacre|atrocity/i, 'Society'],
-  [/pandemic|epidemic|famine|disaster|earthquake|flood/i, 'Natural Event'],
-  [/invention|technology|aircraft|weapon/i, 'Technology'],
+  [/pandemic|epidemic|famine|disaster|earthquake|flood|tsunami|volcano/i, 'Natural Event'],
+  [/invention|technology|aircraft|weapon|rocket|spacecraft|satellite/i, 'Technology'],
+  [/discovery|experiment|observation|astronomy|physics|chemistry|biology|scientific/i, 'Science'],
+  [/council\b|crusade|papal|mosque|synagogue|cathedral|schism|canoniz|monastery|pilgrimage|religious|church\b/i, 'Religion'],
+  [/painting|sculpture|architecture\b|literature|music\b|theater|opera|poem|architect/i, 'Art & Culture'],
+  [/trade\b|commerce|bank|market|currency|colonial|economic|financial|tax\b/i, 'Economics'],
+  [/expedition|voyage|explor|coloniz\b/i, 'Exploration'],
+  [/philosopher|treatise|ethics|logic|philosophy/i, 'Philosophy'],
 ]
 
 function mapCategory(typeLabels, fallback) {
@@ -130,7 +225,24 @@ function resolveWikidataDate(iso, precCode) {
 // One query, aggregated server-side so multivalued properties (location, type)
 // don't fan the result out into duplicate rows. GROUP_CONCAT collapses them;
 // SAMPLE picks one point-in-time statement per event.
-function buildQuery(rootQid) {
+//
+// The scope clause varies by recipe — everything else is identical.
+function scopeClause(topic) {
+  const { qid, recipe = 'conflict' } = topic
+  if (recipe === 'country') {
+    return `?event wdt:P17 wd:${qid} .`
+  }
+  if (recipe === 'hybrid') {
+    // Combines country (P17) and conflict (P361) scopes. Best for empires and
+    // long-running states where P17 alone is too sparse but the entity also has
+    // battles/events linked via the part-of chain.
+    return `{ ?event wdt:P17 wd:${qid} } UNION { ?event wdt:P361/wdt:P361? wd:${qid} }`
+  }
+  // Default 'conflict': part-of chain (≤2 hops) OR direct conflict link.
+  return `{ ?event wdt:P361/wdt:P361? wd:${qid} } UNION { ?event wdt:P607 wd:${qid} }`
+}
+
+function buildQuery(topic) {
   return `
 SELECT ?event ?eventLabel
        (SAMPLE(?time) AS ?time) (SAMPLE(?prec) AS ?prec)
@@ -139,7 +251,7 @@ SELECT ?event ?eventLabel
        (SAMPLE(?coord) AS ?coord)
        (SAMPLE(?article) AS ?article)
 WHERE {
-  ?event wdt:P361/wdt:P361? wd:${rootQid} .
+  ${scopeClause(topic)}
   ?event p:P585 ?st . ?st psv:P585 ?tv .
   ?tv wikibase:timeValue ?time ; wikibase:timePrecision ?prec .
   OPTIONAL { ?event wdt:P31 ?type .
@@ -180,47 +292,57 @@ const NOW_YEAR = new Date().getFullYear()
 function toEvent(row, topic) {
   const date = resolveWikidataDate(row.time.value, parseInt(row.prec.value, 10))
   if (!date) return null
-  // Guard: a `point in time` in the future is a data error for a historical
-  // timeline (e.g. a planned declassification or estimated date), not an event.
+  // Guard: future P585 dates are data errors (planned declassification, estimated dates).
   if (date.year > NOW_YEAR + 1) return null
-  // Guard: the label service returns the bare Q-id when an item has no English
-  // label. Those items also lack an English Wikipedia article (no title, image,
-  // or summary to show), so drop them as unviewable noise.
+  // Guard: topic-level year cap removes over-attributed proxy/aftermath events.
+  if (topic.yearEnd && date.year > topic.yearEnd) return null
+  // Guard: bare Q-id label = no English label and no Wikipedia article → nothing to show.
   if (/^Q\d+$/.test(row.eventLabel.value)) return null
+  // Guard: article-title items ("Timeline of X", "History of Y") are Wikipedia stubs,
+  // not events; they appear when a list article gets erroneously tagged with P585.
+  if (/^(timeline|history|list)\s+of\b/i.test(row.eventLabel.value)) return null
+  // Guard: Wikipedia era-category pages ("1st-century Roman domes", "2nd century in
+  // Roman Britain") are reference categories, not individual dateable events.
+  if (/^\d+(st|nd|rd|th)[- ]century\b/i.test(row.eventLabel.value)) return null
   const types = row.types?.value ? row.types.value.split('|').filter(Boolean) : []
   const places = row.places?.value ? row.places.value.split('|').filter(Boolean) : []
   const wikiLink = wikiTitleFromUrl(row.article?.value)
   return {
     ...date,
     title: row.eventLabel.value,
-    description: '', // enrichment (Wikipedia extract) is a separate, later step
+    description: '',
     category: mapCategory(types, topic.defaultCategory),
     location: places,
     wikiLink,
     sourceArticle: topic.sourceArticle,
     sourceUrl: topic.sourceUrl,
     scrapedAt: new Date(),
-    // provenance — what makes this row reproducible / auditable
     wikidataId: row.event.value.split('/').pop(),
+    isSynthetic: false,
   }
 }
 
-// Query + aggregate + dedupe + report one topic. Returns the deduped events.
+// Query + aggregate + dedupe + inject bookends + report one topic.
 async function fetchTopic(topic) {
   console.log(`\n▶ ${topic.sourceArticle}  (root ${topic.qid})`)
   console.log('  querying WDQS…')
-  const rows = await runSparql(buildQuery(topic.qid))
+  const rows = await runSparql(buildQuery(topic))
 
   const events = rows.map((r) => toEvent(r, topic)).filter(Boolean)
-  // dedup on (wikidataId) — the GROUP BY already collapses fan-out, but guard.
   const byId = new Map()
   for (const e of events) byId.set(e.wikidataId, e)
-  const deduped = [...byId.values()].sort((a, b) => a.year - b.year)
+  let deduped = [...byId.values()].sort((a, b) => a.year - b.year)
 
-  const withLink = deduped.filter((e) => e.wikiLink).length
-  const years = deduped.map((e) => e.year)
-  console.log(`  ✓ ${deduped.length} unique events  (${rows.length} rows)  `
-    + `span ${Math.min(...years)}…${Math.max(...years)}  links ${Math.round(100 * withLink / deduped.length)}%`)
+  console.log('  fetching entity info…')
+  const topicInfo = await fetchTopicInfo(topic.qid)
+  deduped = injectBookends(deduped, topic, topicInfo)
+
+  const real = deduped.filter((e) => !e.isSynthetic)
+  const withLink = real.filter((e) => e.wikiLink).length
+  const years = real.map((e) => e.year)
+  const synth = deduped.length - real.length
+  console.log(`  ✓ ${real.length} events  (${rows.length} rows)${synth ? `  +${synth} bookend(s)` : ''}  `
+    + `span ${Math.min(...years)}…${Math.max(...years)}  links ${Math.round(100 * withLink / real.length)}%`)
   return deduped
 }
 
@@ -230,15 +352,26 @@ const slugify = (title) =>
 
 // Pull human-readable "about this topic" info for a root entity: the Wikidata
 // one-line description, the lead paragraph + hero image from its main Wikipedia
-// article, and the article title. Used to enrich the timeline page.
+// article, the article title, the entity label, and P571/P576 dates used to
+// inject synthetic bookend events.
 async function fetchTopicInfo(qid) {
-  const out = { wikiLink: '', tagline: '', description: '', heroImage: '' }
+  const out = { label: '', wikiLink: '', tagline: '', description: '', heroImage: '', inception: null, dissolution: null }
   try {
     const ed = await fetch(`https://www.wikidata.org/wiki/Special:EntityData/${qid}.json`,
       { headers: { 'User-Agent': UA } })
     if (!ed.ok) return out
     const entity = (await ed.json()).entities?.[qid]
+    out.label = entity?.labels?.en?.value ?? ''
     out.tagline = entity?.descriptions?.en?.value ?? ''
+
+    const extractDate = (claims) => {
+      const val = claims?.[0]?.mainsnak?.datavalue?.value
+      if (!val) return null
+      return resolveWikidataDate(val.time, val.precision)
+    }
+    out.inception = extractDate(entity?.claims?.P571)
+    out.dissolution = extractDate(entity?.claims?.P576)
+
     const article = entity?.sitelinks?.enwiki?.title
     if (!article) return out
     out.wikiLink = article
@@ -251,8 +384,73 @@ async function fetchTopicInfo(qid) {
       out.description = d.extract ?? ''
       out.heroImage = d.thumbnail?.source ?? ''
     }
+
+    // Fallback: if the Wikipedia summary has no thumbnail (common for articles
+    // whose lead image is non-free), try the entity's P18 (image) claim.
+    // Wikimedia Commons Special:FilePath redirects to the actual file URL.
+    if (!out.heroImage) {
+      const p18 = entity?.claims?.P18?.[0]?.mainsnak?.datavalue?.value
+      if (p18) {
+        const filename = encodeURIComponent(p18.replace(/ /g, '_'))
+        out.heroImage = `https://commons.wikimedia.org/wiki/Special:FilePath/${filename}?width=400`
+      }
+    }
   } catch { /* best-effort enrichment — leave blanks on failure */ }
   return out
+}
+
+const BOOKEND_GAP_YEARS = 5
+
+// Inject synthetic start/end events when P571 (inception) or P576 (dissolution)
+// dates lie more than BOOKEND_GAP_YEARS outside the fetched event span. This
+// ensures empire and long-running state timelines have a visible beginning and
+// end even when Wikidata's event coverage doesn't reach the boundary.
+function injectBookends(events, topic, topicInfo) {
+  if (!topicInfo.label) return events
+  const result = [...events]
+  const label = topicInfo.label
+
+  if (topicInfo.inception) {
+    const inc = topicInfo.inception
+    const firstYear = result[0]?.year ?? Infinity
+    if (firstYear - inc.year > BOOKEND_GAP_YEARS) {
+      result.unshift({
+        ...inc,
+        title: `Beginning of ${label}`,
+        description: topicInfo.tagline || '',
+        category: ['Politics'],
+        location: [],
+        wikiLink: topicInfo.wikiLink || '',
+        sourceArticle: topic.sourceArticle,
+        sourceUrl: topic.sourceUrl,
+        scrapedAt: new Date(),
+        wikidataId: `_synth:${topic.qid}:start`,
+        isSynthetic: true,
+      })
+    }
+  }
+
+  if (topicInfo.dissolution) {
+    const dis = topicInfo.dissolution
+    const lastYear = result[result.length - 1]?.year ?? -Infinity
+    if (dis.year - lastYear > BOOKEND_GAP_YEARS) {
+      result.push({
+        ...dis,
+        title: `End of ${label}`,
+        description: topicInfo.tagline || '',
+        category: ['Politics'],
+        location: [],
+        wikiLink: topicInfo.wikiLink || '',
+        sourceArticle: topic.sourceArticle,
+        sourceUrl: topic.sourceUrl,
+        scrapedAt: new Date(),
+        wikidataId: `_synth:${topic.qid}:end`,
+        isSynthetic: true,
+      })
+    }
+  }
+
+  return result
 }
 
 // Rebuild the `timelines` collection (browse list + slug→title resolution) by
@@ -345,8 +543,17 @@ async function main() {
     for (const e of deduped) {
       await col.updateOne({ wikidataId: e.wikidataId }, { $set: e }, { upsert: true })
     }
+    // Remove any event for this topic that no longer appears in the result set.
+    // This keeps the DB in sync when filter rules change (yearEnd cap, title guards,
+    // etc.) without requiring a full delete-and-reinsert of the topic.
+    const currentIds = deduped.map((e) => e.wikidataId)
+    const removed = await col.deleteMany({
+      sourceArticle: topic.sourceArticle,
+      wikidataId: { $nin: currentIds },
+    })
+    const removedNote = removed.deletedCount ? `  (removed ${removed.deletedCount} stale)` : ''
     total += deduped.length
-    console.log(`  ✓ ${deduped.length} → events  (${topic.sourceArticle})`)
+    console.log(`  ✓ ${deduped.length} → events  (${topic.sourceArticle})${removedNote}`)
   }
   console.log(`\n  ✓ ${total} events upserted into \`events\``)
 

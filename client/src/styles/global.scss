@@ -9,3 +9,32 @@ body {
 }
 
 a:hover { text-decoration: underline; }
+
+// ── Keyframes ──────────────────────────────────────────────────────────────────
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+// Year digit animation — the .rotated wrapper handles orientation, so this
+// just slides in Y within that local frame.
+@keyframes yearEnter {
+  from { opacity: 0; transform: translateY(-10px); filter: blur(3px); }
+  to   { opacity: 1; transform: translateY(0);     filter: blur(0);   }
+}
+
+// ── Route transition wrapper ───────────────────────────────────────────────────
+.routeTransition {
+  animation: fadeIn $duration-base $ease-out both;
+}

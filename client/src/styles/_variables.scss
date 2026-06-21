@@ -3,7 +3,7 @@ $font-serif: 'Georgia', 'Times New Roman', serif;
 $font-sans: system-ui, -apple-system, sans-serif;
 
 // Color palette — light, editorial
-$color-bg: #faf8f5;
+$color-bg: #ffffff;
 $color-surface: #ffffff;
 $color-border: #e0dbd4;
 $color-text: #1a1714;
@@ -25,3 +25,10 @@ $breakpoint-mobile: 767px;
 $timeline-dot-size: 10px;
 $timeline-card-width: 280px;
 $timeline-height: 420px;
+
+// Motion
+$ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+$ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+$duration-fast: 120ms;
+$duration-base: 220ms;
+$duration-slow: 350ms;

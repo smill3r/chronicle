@@ -27,6 +27,7 @@ export interface HistoricalEvent {
   wikiThumbnail?: string;
   sourceArticle: string;
   sourceUrl: string;
+  isSynthetic?: boolean;
 }
 
 export interface PaginatedEvents {

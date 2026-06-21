@@ -1,0 +1,293 @@
+@use '../../styles/variables' as *;
+
+// ── Shared ────────────────────────────────────────────────────────────────────
+
+.sheet {
+  background: $color-surface;
+  overflow: hidden;
+
+  // ── Desktop: editorial right column, fade in/out ───────────────────────────
+  @media (min-width: 768px) {
+    // Hidden when no event selected
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity $duration-base $ease-out, visibility 0ms $duration-base;
+
+    &.open {
+      visibility: visible;
+      opacity: 1;
+      transition: opacity $duration-base $ease-out;
+      overflow-y: auto;
+      // Animate content in when sheet opens
+      animation: fadeInUp $duration-slow $ease-out both;
+    }
+  }
+
+  // ── Mobile: full-screen sheet from right ──────────────────────────────────
+  @media (max-width: 767px) {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform $duration-slow $ease-in-out;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+}
+
+// ── Sheet header ──────────────────────────────────────────────────────────────
+
+.sheetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $space-sm $space-md;
+  position: sticky;
+  top: 0;
+  background: $color-surface;
+  z-index: 1;
+  border-bottom: 1px solid $color-border;
+
+  @media (min-width: 768px) {
+    // On desktop only show the close button, hide the swipe hint
+    .swipeHint { display: none; }
+    border-bottom: none;
+    justify-content: flex-end;
+    padding: $space-md $space-md 0;
+  }
+}
+
+.swipeHint {
+  font-size: 11px;
+  color: $color-text-muted;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.closeBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid $color-border;
+  background: transparent;
+  cursor: pointer;
+  color: $color-text-muted;
+  font-size: 16px;
+  transition: background $duration-fast, color $duration-fast;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: $color-text;
+  }
+}
+
+// ── Body ──────────────────────────────────────────────────────────────────────
+
+.body {
+  padding: $space-md $space-lg $space-xl;
+
+  @media (min-width: 768px) {
+    padding: 0 $space-lg $space-xl;
+  }
+}
+
+.date {
+  font-size: 11px;
+  font-family: monospace;
+  color: $color-text-muted;
+  margin-bottom: $space-xs;
+  letter-spacing: 0.04em;
+}
+
+.catPill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: $space-sm;
+}
+
+// Left accent border instead of a card — gives it an editorial feel on desktop.
+.title {
+  font-family: $font-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: $color-text;
+  line-height: 1.25;
+  margin: 0 0 $space-md;
+  border-left: 3px solid;
+  padding-left: $space-sm;
+
+  @media (min-width: 768px) {
+    font-size: 26px;
+  }
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: $color-text-muted;
+  margin-bottom: $space-md;
+}
+
+.desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: $color-text-secondary;
+  margin: 0 0 $space-lg;
+}
+
+// ── Wikipedia section ─────────────────────────────────────────────────────────
+
+.sectionLabel {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  margin-bottom: $space-sm;
+}
+
+.wikiSection {
+  padding-top: $space-md;
+  border-top: 1px solid $color-border;
+  margin-bottom: $space-md;
+}
+
+.thumbnail {
+  width: 100%;
+  height: auto;
+  max-height: 55vh;
+  object-fit: contain;
+  object-position: center;
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+  margin-bottom: $space-sm;
+  display: block;
+}
+
+.extract {
+  font-size: 13px;
+  line-height: 1.7;
+  color: $color-text-secondary;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 8;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Shimmer skeleton while Wikipedia loads
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonLine {
+  height: 13px;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    $color-border 25%,
+    darken($color-border, 4%) 50%,
+    $color-border 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+.skeletonShort { width: 65%; }
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.wikiLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $color-accent;
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1.5px solid $color-accent;
+  border-radius: 6px;
+  transition: background $duration-fast;
+  margin-top: $space-sm;
+
+  &:hover { background: rgba($color-accent, 0.07); }
+}
+
+// ── Related events ────────────────────────────────────────────────────────────
+
+.relatedSection {
+  margin-top: $space-lg;
+  padding-top: $space-md;
+  border-top: 1px solid $color-border;
+}
+
+.relatedRow {
+  display: flex;
+  align-items: center;
+  gap: $space-sm;
+  width: 100%;
+  padding: $space-sm 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  text-align: left;
+  border-radius: 4px;
+  transition: background $duration-fast;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: rgba(0, 0, 0, 0.03); }
+}
+
+.relatedDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.relatedContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.relatedYear {
+  font-size: 10px;
+  font-family: monospace;
+  color: $color-text-muted;
+}
+
+.relatedTitle {
+  font-size: 12px;
+  color: $color-text;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

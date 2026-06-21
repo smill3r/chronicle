@@ -1,0 +1,40 @@
+@use '../../styles/variables' as *;
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.label {
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+  // Vertical orientation for the label too
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+}
+
+// Stable rotation wrapper — keeps rotation out of the animated element so
+// yearEnter's transform doesn't conflict with the rotation.
+.rotated {
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+  overflow: hidden; // clips the slide-in animation cleanly
+}
+
+.value {
+  font-family: $font-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: $color-text;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  display: block;
+  // key={year} on this element restarts this animation each year change
+  animation: yearEnter 380ms cubic-bezier(0.2, 0, 0.3, 1) both;
+}

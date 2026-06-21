@@ -46,6 +46,9 @@ export class ChronicleEvent {
 
   @Prop({ type: Date, default: Date.now })
   scrapedAt!: Date;
+
+  @Prop({ default: false })
+  isSynthetic!: boolean;
 }
 
 export const EventSchema = SchemaFactory.createForClass(ChronicleEvent);
