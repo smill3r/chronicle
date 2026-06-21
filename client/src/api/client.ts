@@ -34,9 +34,16 @@ export interface EventsParams {
   limit?: number;
 }
 
+let _timelinesCache: Timeline[] | null = null;
+
 export const api = {
   timelines: {
-    list: () => get<Timeline[]>('/timelines'),
+    list: async () => {
+      if (_timelinesCache) return _timelinesCache;
+      const result = await get<Timeline[]>('/timelines');
+      _timelinesCache = result;
+      return result;
+    },
 
     discover: () => get<DiscoverResult>('/timelines/discover/random'),
 

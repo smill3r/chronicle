@@ -136,7 +136,7 @@ export class TimelinesService {
 
     const event = await this.eventModel
       .findOne({ _id: eventId, sourceArticle: timeline.title })
-      .select('wikiLink wikiSummary wikiThumbnail')
+      .select('title wikiLink wikiSummary wikiThumbnail')
       .lean()
       .exec();
     if (!event) throw new NotFoundException(`Event "${eventId}" not found`);
@@ -150,45 +150,103 @@ export class TimelinesService {
       };
     }
 
-    // No wikiLink means we can't fetch a summary
-    if (!event.wikiLink) {
-      return { summary: null, thumbnail: null, wikiLink: '' };
+    if (event.wikiLink) {
+      return this.fetchAndCacheByLink(eventId, event.wikiLink);
     }
 
-    // Fetch from Wikipedia REST API (lazy, first-time only)
+    // No Wikidata sitelink — search Wikipedia by event title as a fallback.
+    // Only accepts the result if the article title is a close enough match to
+    // avoid surfacing an unrelated article for a short or ambiguous title.
+    return this.searchAndCacheByTitle(eventId, event.title);
+  }
+
+  private async fetchAndCacheByLink(eventId: string, wikiLink: string) {
     try {
-      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(event.wikiLink.replace(/ /g, '_'))}`;
+      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(wikiLink.replace(/ /g, '_'))}`;
       const res = await fetch(url, {
         headers: { 'User-Agent': 'Chronicle/1.0 (portfolio project; smillerjess@gmail.com)' },
         signal: AbortSignal.timeout(8000),
       });
+      if (!res.ok) return { summary: null, thumbnail: null, wikiLink };
 
-      if (!res.ok) {
-        return { summary: null, thumbnail: null, wikiLink: event.wikiLink };
-      }
-
-      const data = await res.json() as {
-        extract?: string;
-        thumbnail?: { source?: string };
-      };
-
+      const data = await res.json() as { extract?: string; thumbnail?: { source?: string } };
       const summary = data.extract ?? null;
       // Use Wikipedia's own thumbnail size as-is — rewriting the embedded pixel
       // width is unreliable (non-free/fair-use images cap thumbnail rendering
       // below their original width and 400 on larger requests).
       const thumbnail = data.thumbnail?.source ?? null;
 
-      // Cache result on the event document (best-effort — don't fail if write fails)
       if (summary) {
         await this.eventModel.updateOne(
           { _id: eventId },
           { $set: { wikiSummary: summary, wikiThumbnail: thumbnail ?? '' } },
         ).exec();
       }
-
-      return { summary, thumbnail, wikiLink: event.wikiLink };
+      return { summary, thumbnail, wikiLink };
     } catch {
-      return { summary: null, thumbnail: null, wikiLink: event.wikiLink };
+      return { summary: null, thumbnail: null, wikiLink };
     }
+  }
+
+  private async searchAndCacheByTitle(eventId: string, title: string) {
+    const UA = 'Chronicle/1.0 (portfolio project; smillerjess@gmail.com)';
+    try {
+      // Wikipedia opensearch returns up to 3 title completions for the query.
+      const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(title)}&limit=3&format=json&redirects=resolve`;
+      const searchRes = await fetch(searchUrl, {
+        headers: { 'User-Agent': UA },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!searchRes.ok) return { summary: null, thumbnail: null, wikiLink: '' };
+
+      const [, candidates] = await searchRes.json() as [string, string[]];
+      const match = candidates.find((c) => this.titlesMatch(title, c));
+      if (!match) return { summary: null, thumbnail: null, wikiLink: '' };
+
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(match.replace(/ /g, '_'))}`;
+      const summaryRes = await fetch(summaryUrl, {
+        headers: { 'User-Agent': UA },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!summaryRes.ok) return { summary: null, thumbnail: null, wikiLink: match };
+
+      const data = await summaryRes.json() as { extract?: string; thumbnail?: { source?: string } };
+      const summary = data.extract ?? null;
+      const thumbnail = data.thumbnail?.source ?? null;
+
+      if (summary) {
+        // Cache the resolved wikiLink too so future calls skip the search step.
+        await this.eventModel.updateOne(
+          { _id: eventId },
+          { $set: { wikiLink: match, wikiSummary: summary, wikiThumbnail: thumbnail ?? '' } },
+        ).exec();
+      }
+      return { summary, thumbnail, wikiLink: match };
+    } catch {
+      return { summary: null, thumbnail: null, wikiLink: '' };
+    }
+  }
+
+  // Returns true when all significant words in the event title appear in the
+  // Wikipedia candidate title. "Significant" means: longer than 2 chars, not a
+  // stop word, not a bare year. This is intentionally strict — a partial match
+  // (e.g. "Battle" matching "Battle of Hastings") is rejected.
+  private titlesMatch(eventTitle: string, wikiTitle: string): boolean {
+    const STOPS = new Set([
+      'the', 'of', 'a', 'an', 'in', 'on', 'at', 'to', 'for',
+      'and', 'or', 'by', 'with', 'its', 'from', 'during',
+    ]);
+    const significant = (s: string) =>
+      s.toLowerCase()
+        .replace(/[^a-z0-9 ]/g, ' ')
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !STOPS.has(w) && !/^\d+$/.test(w));
+
+    const eventWords = significant(eventTitle);
+    // Require at least 2 significant words — a single keyword like "Battle" would
+    // match "Battle of Hastings" and produce a false positive.
+    if (eventWords.length < 2) return false;
+    const wikiWords = new Set(significant(wikiTitle));
+    return eventWords.every((w) => wikiWords.has(w));
   }
 }

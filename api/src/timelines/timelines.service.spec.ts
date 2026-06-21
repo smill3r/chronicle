@@ -218,6 +218,7 @@ describe('TimelinesService', () => {
     const VALID_ID = '507f1f77bcf86cd799439011';
     const mockEvent = {
       _id: VALID_ID,
+      title: 'Burning of the Library of Alexandria',
       wikiLink: 'Library of Alexandria',
       wikiSummary: '',
       wikiThumbnail: '',
@@ -255,16 +256,7 @@ describe('TimelinesService', () => {
       expect(fetchSpy).not.toHaveBeenCalled();
     });
 
-    it('returns null summary when wikiLink is empty', async () => {
-      eventModel.findOne = jest.fn().mockReturnValue({
-        select: () => ({ lean: () => ({ exec: jest.fn().mockResolvedValue({ ...mockEvent, wikiLink: '' }) }) }),
-      });
-
-      const result = await service.getEventSummary('the-french-revolution', VALID_ID);
-      expect(result.summary).toBeNull();
-    });
-
-    it('fetches Wikipedia, stores result, and returns summary on cache miss', async () => {
+    it('fetches Wikipedia by wikiLink, stores result, and returns summary on cache miss', async () => {
       const wikiResponse = {
         extract: 'The Library of Alexandria was one of the largest libraries.',
         thumbnail: { source: 'http://wiki-thumb.jpg' },
@@ -298,6 +290,68 @@ describe('TimelinesService', () => {
 
       const result = await service.getEventSummary('the-french-revolution', VALID_ID);
       expect(result.summary).toBeNull();
+    });
+
+    describe('title-search fallback (no wikiLink)', () => {
+      const noLinkEvent = {
+        ...mockEvent,
+        title: 'Battle of Manzikert',
+        wikiLink: '',
+      };
+
+      beforeEach(() => {
+        eventModel.findOne = jest.fn().mockReturnValue({
+          select: () => ({ lean: () => ({ exec: jest.fn().mockResolvedValue(noLinkEvent) }) }),
+        });
+      });
+
+      it('searches Wikipedia by title and returns summary when candidate matches', async () => {
+        const searchResponse = ['Battle of Manzikert', ['Battle of Manzikert'], [], []];
+        const wikiResponse = {
+          extract: 'The Battle of Manzikert was fought in 1071.',
+          thumbnail: { source: 'http://manzikert-thumb.jpg' },
+        };
+        jest.spyOn(global, 'fetch')
+          .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(searchResponse) } as Response)
+          .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(wikiResponse) } as Response);
+
+        const result = await service.getEventSummary('byzantine-empire', VALID_ID);
+        expect(result.summary).toBe(wikiResponse.extract);
+        expect(result.thumbnail).toBe('http://manzikert-thumb.jpg');
+        expect(result.wikiLink).toBe('Battle of Manzikert');
+        // wikiLink is also cached so future calls skip the search
+        expect(eventModel.updateOne).toHaveBeenCalledWith(
+          { _id: VALID_ID },
+          { $set: { wikiLink: 'Battle of Manzikert', wikiSummary: wikiResponse.extract, wikiThumbnail: 'http://manzikert-thumb.jpg' } },
+        );
+      });
+
+      it('returns null when no search candidate title matches the event title', async () => {
+        // e.g. "Battle of Manzikert" searched but Wikipedia only suggests an unrelated article
+        const searchResponse = ['Battle of Manzikert', ['Byzantine–Seljuk Wars'], [], []];
+        jest.spyOn(global, 'fetch')
+          .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(searchResponse) } as Response);
+
+        const result = await service.getEventSummary('byzantine-empire', VALID_ID);
+        expect(result.summary).toBeNull();
+        expect(eventModel.updateOne).not.toHaveBeenCalled();
+      });
+
+      it('returns null when the search API returns no candidates', async () => {
+        const searchResponse = ['Battle of Manzikert', [], [], []];
+        jest.spyOn(global, 'fetch')
+          .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(searchResponse) } as Response);
+
+        const result = await service.getEventSummary('byzantine-empire', VALID_ID);
+        expect(result.summary).toBeNull();
+      });
+
+      it('returns null when the search API call fails', async () => {
+        jest.spyOn(global, 'fetch').mockRejectedValueOnce(new Error('network error'));
+
+        const result = await service.getEventSummary('byzantine-empire', VALID_ID);
+        expect(result.summary).toBeNull();
+      });
     });
   });
 });
