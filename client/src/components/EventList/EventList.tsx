@@ -112,7 +112,15 @@ export default function EventList({ events, span, selectedEvent, onSelect }: Pro
 
                   <div className={styles.content}>
                     <div className={styles.yearDisplay}>{ev.yearDisplay}</div>
-                    <h3 className={styles.title}>{cap(ev.title)}</h3>
+                    <h3 className={styles.title}>
+                      {cap(ev.title)}
+                      {ev.wikiLink && (
+                        <span
+                          className={`ti ti-brand-wikipedia ${styles.wikiIcon}`}
+                          aria-label="Has Wikipedia article"
+                        />
+                      )}
+                    </h3>
                     {ev.description && (
                       <p className={styles.desc}>{cap(ev.description)}</p>
                     )}
