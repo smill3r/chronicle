@@ -33,6 +33,9 @@ export function useScrollFocus(
     // True pointer device (mouse/trackpad) — switch to mouse-distance mode.
     const isPointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
+    // Mobile: zoom disabled entirely. CSS handles static appearance.
+    if (!isPointer) return;
+
     const update = () => {
       const rows = container.querySelectorAll<HTMLElement>('[data-event-id]');
       const vh = window.innerHeight;

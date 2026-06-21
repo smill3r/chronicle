@@ -277,3 +277,14 @@ $rail-width-mobile: 24px;
   color: $color-text-muted;
   padding: 2px 0;
 }
+
+// ── Mobile: zoom effect disabled ──────────────────────────────────────────────
+// The hook bails out on touch devices; override all focus-val-driven properties
+// to their fully-on values so every row renders at full opacity and size.
+
+@media (max-width: 767px) {
+  .row { opacity: 1; }
+  .title { transform: none; }
+  .dot { transform: translate(-50%, -50%) scale(1); }
+  .pills { opacity: 1; }
+}
