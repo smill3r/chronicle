@@ -29,7 +29,6 @@ describe('HighlightLegend', () => {
   it('marks the active category button with aria-pressed', () => {
     render(<HighlightLegend categories={CATS} highlight="Politics" onToggle={() => {}} />);
     const btn = screen.getByText('Politics').closest('button');
-    // active class is applied; no explicit aria-pressed on this component — just check active styling via class
-    expect(btn?.className).toMatch(/active/i);
+    expect(btn?.getAttribute('aria-pressed')).toBe('true');
   });
 });

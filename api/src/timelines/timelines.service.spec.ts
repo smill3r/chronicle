@@ -33,6 +33,7 @@ function makeMockModel(findOneResult: unknown, findResult: unknown[] = [], count
   return {
     findOne: jest.fn().mockReturnValue({ select: () => ({ lean: () => ({ exec }) }) }),
     find: jest.fn().mockReturnValue(query),
+    aggregate: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
     countDocuments: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(countResult) }),
     updateOne: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue({}) }),
     _lean: lean,
@@ -75,6 +76,43 @@ describe('TimelinesService', () => {
       });
       const result = await service.findBySlug('the-french-revolution');
       expect(result).toEqual(mockTimeline);
+    });
+  });
+
+  describe('discover', () => {
+    const sampled = {
+      _id: '507f1f77bcf86cd799439011',
+      year: 1789, yearDisplay: '1789', datePrecision: 'year',
+      title: 'Storming of the Bastille', description: '',
+      category: ['War'], location: ['Paris'], wikiLink: 'Storming of the Bastille',
+      sourceArticle: 'Timeline of the French Revolution',
+    };
+
+    it('samples a random event with a wikiLink and returns it with slug + summary', async () => {
+      eventModel.aggregate = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue([sampled]),
+      });
+      // getEventSummary's cached path: the event already has a summary
+      eventModel.findOne = jest.fn().mockReturnValue({
+        select: () => ({ lean: () => ({ exec: jest.fn().mockResolvedValue({
+          wikiLink: 'Storming of the Bastille', wikiSummary: 'cached blurb', wikiThumbnail: '',
+        }) }) }),
+      });
+
+      const res = await service.discover();
+
+      const pipeline = eventModel.aggregate.mock.calls[0][0];
+      expect(pipeline).toEqual(expect.arrayContaining([{ $sample: { size: 1 } }]));
+      expect(res.slug).toBe('the-french-revolution');
+      expect(res.event.title).toBe('Storming of the Bastille');
+      expect(res.summary).toBe('cached blurb');
+    });
+
+    it('throws when there are no events to sample', async () => {
+      eventModel.aggregate = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue([]),
+      });
+      await expect(service.discover()).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -145,10 +183,10 @@ describe('TimelinesService', () => {
       );
     });
 
-    it('sorts by year only when q is not provided', async () => {
+    it('sorts by year with _id tiebreaker when q is not provided', async () => {
       await service.findEvents('the-french-revolution', {});
       const query = eventModel.find.mock.results[0].value;
-      expect(query.sort).toHaveBeenCalledWith({ year: 1 });
+      expect(query.sort).toHaveBeenCalledWith({ year: 1, _id: 1 });
     });
 
     it('applies correct skip and limit for pagination', async () => {
@@ -164,6 +202,7 @@ describe('TimelinesService', () => {
       expect(query.skip).toHaveBeenCalledWith(0);
       expect(query.limit).toHaveBeenCalledWith(50);
     });
+
   });
 
   describe('findEvents — throws when slug not found', () => {

@@ -1,6 +1,14 @@
-import type { Timeline, PaginatedEvents } from '../types';
+import type { Timeline, PaginatedEvents, HistoricalEvent } from '../types';
 
 export interface WikiSummary {
+  summary: string | null;
+  thumbnail: string | null;
+  wikiLink: string;
+}
+
+export interface DiscoverResult {
+  slug: string;
+  event: Omit<HistoricalEvent, 'sourceUrl'>;
   summary: string | null;
   thumbnail: string | null;
   wikiLink: string;
@@ -29,6 +37,8 @@ export interface EventsParams {
 export const api = {
   timelines: {
     list: () => get<Timeline[]>('/timelines'),
+
+    discover: () => get<DiscoverResult>('/timelines/discover/random'),
 
     get: (slug: string) => get<Timeline>(`/timelines/${slug}`),
 

@@ -2,11 +2,13 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api } from '../api/client';
 import type { Timeline, HistoricalEvent } from '../types';
+import { CATEGORY_COLORS } from '../types';
 import MiniMap from '../components/MiniMap/MiniMap';
 import HighlightLegend from '../components/HighlightLegend/HighlightLegend';
 import EventList from '../components/EventList/EventList';
 import EventDetailPanel from '../components/EventDetailPanel/EventDetailPanel';
 import SearchBar from '../components/SearchBar/SearchBar';
+import { formatYear } from '../utils/formatYear';
 import styles from './TimelinePage.module.scss';
 
 const PAGE_SIZE = 50;
@@ -19,7 +21,8 @@ export default function TimelinePage() {
   const [page, setPage] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [highlight, setHighlight] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  const [yearRange, setYearRange] = useState<[number, number] | null>(null);
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEvent, setSelectedEvent] = useState<HistoricalEvent | null>(null);
@@ -38,6 +41,9 @@ export default function TimelinePage() {
       try {
         const result = await api.timelines.events(slug, {
           q: searchQuery || undefined,
+          category: categoryFilter || undefined,
+          yearStart: yearRange?.[0],
+          yearEnd: yearRange?.[1],
           page: pageNum,
           limit: PAGE_SIZE,
         });
@@ -50,7 +56,7 @@ export default function TimelinePage() {
         setInitialLoading(false);
       }
     },
-    [slug, searchQuery],
+    [slug, searchQuery, categoryFilter, yearRange],
   );
 
   useEffect(() => {
@@ -88,6 +94,23 @@ export default function TimelinePage() {
     setSelectedEvent((prev) => (prev?._id === ev._id ? null : ev));
   };
 
+  const handleCategoryToggle = (cat: string | null) => {
+    setCategoryFilter(cat);
+  };
+
+  const handleRangeChange = (range: [number, number] | null) => {
+    setYearRange(range);
+  };
+
+  const clearAllFilters = () => {
+    setCategoryFilter(null);
+    setYearRange(null);
+    setSearchInput('');
+    setSearchQuery('');
+  };
+
+  const hasActiveFilters = categoryFilter !== null || yearRange !== null || searchQuery !== '';
+
   if (!timeline) return <div className={styles.state}>Loading…</div>;
 
   const span = timeline.yearEnd - timeline.yearStart;
@@ -106,21 +129,83 @@ export default function TimelinePage() {
         <h1 className={styles.title}>{timeline.title}</h1>
         <div className={styles.controls}>
           <SearchBar value={searchInput} onChange={handleSearchChange} />
+          {hasActiveFilters && (
+            <div className={styles.activeFilters}>
+              {categoryFilter && (
+                <span
+                  className={styles.filterChip}
+                  style={{
+                    background: CATEGORY_COLORS[categoryFilter]?.bg ?? '#f0f0f0',
+                    color: CATEGORY_COLORS[categoryFilter]?.text ?? '#444',
+                  }}
+                >
+                  {categoryFilter}
+                  <button className={styles.chipClear} onClick={() => setCategoryFilter(null)} aria-label={`Remove ${categoryFilter} filter`}>
+                    <span className="ti ti-x" />
+                  </button>
+                </span>
+              )}
+              {yearRange && (
+                <span className={styles.filterChip} style={{ background: '#e8f0fa', color: '#0c447c' }}>
+                  {timeline.yearStart !== yearRange[0] || timeline.yearEnd !== yearRange[1]
+                    ? `${yearRange[0] < 0 ? `${Math.abs(yearRange[0])} BC` : yearRange[0]} – ${yearRange[1] < 0 ? `${Math.abs(yearRange[1])} BC` : yearRange[1]}`
+                    : 'Year range'}
+                  <button className={styles.chipClear} onClick={() => setYearRange(null)} aria-label="Remove year range filter">
+                    <span className="ti ti-x" />
+                  </button>
+                </span>
+              )}
+              <button className={styles.clearAll} onClick={clearAllFilters}>
+                Clear all
+              </button>
+            </div>
+          )}
         </div>
       </header>
 
       <div className={styles.body}>
         <div className={styles.main}>
+          {(timeline.description || timeline.heroImage) && (
+            <section className={styles.intro}>
+              <div className={styles.introText}>
+                {timeline.tagline && <p className={styles.kicker}>{timeline.tagline}</p>}
+                {timeline.description && <p className={styles.lead}>{timeline.description}</p>}
+                <div className={styles.introMeta}>
+                  <span>{formatYear(timeline.yearStart)} – {formatYear(timeline.yearEnd)}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{timeline.eventCount.toLocaleString()} events</span>
+                  {timeline.wikiLink && (
+                    <a
+                      className={styles.introLink}
+                      href={`https://en.wikipedia.org/wiki/${encodeURIComponent(timeline.wikiLink.replace(/ /g, '_'))}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span className="ti ti-brand-wikipedia" /> Full article
+                    </a>
+                  )}
+                </div>
+              </div>
+              {timeline.heroImage && (
+                <figure className={styles.introFigure}>
+                  <img className={styles.introHero} src={timeline.heroImage} alt="" />
+                </figure>
+              )}
+            </section>
+          )}
+
           <MiniMap
             events={events}
             yearStart={timeline.yearStart}
             yearEnd={timeline.yearEnd}
+            activeRange={yearRange}
+            onRangeChange={handleRangeChange}
           />
 
           <HighlightLegend
             categories={timeline.categories}
-            highlight={highlight}
-            onToggle={setHighlight}
+            highlight={categoryFilter}
+            onToggle={handleCategoryToggle}
           />
 
           {initialLoading ? (
@@ -129,7 +214,6 @@ export default function TimelinePage() {
             <EventList
               events={events}
               span={span}
-              highlight={highlight}
               selectedEvent={selectedEvent}
               onSelect={handleSelectEvent}
             />
@@ -145,7 +229,10 @@ export default function TimelinePage() {
         <EventDetailPanel
           event={selectedEvent}
           slug={slug!}
+          span={span}
+          allEvents={events}
           onClose={() => setSelectedEvent(null)}
+          onSelectRelated={handleSelectEvent}
         />
       </div>
     </div>

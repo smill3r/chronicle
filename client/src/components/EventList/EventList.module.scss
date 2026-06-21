@@ -1,9 +1,35 @@
 @use '../../styles/variables' as *;
 
+// Shared 3-column grid: [date] [timeline rail] [content]. Era rows and event
+// rows use the same template so the rail line + dots align down the whole list.
+$col-date: 92px;
+$col-rail: 28px;
+$col-date-mobile: 64px;
+$col-rail-mobile: 24px;
+
 .list {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  position: relative;
+}
+
+// One continuous rail line behind the whole list, centered on the rail column.
+// Dots and era nodes paint over it (with a background ring) so it reads as a
+// single connected timeline with markers sitting on it.
+.list::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(#{$col-date} + #{$col-rail} / 2);
+  transform: translateX(-50%);
+  width: 2px;
+  background: $color-border;
+  z-index: 0;
+
+  @media (max-width: 767px) {
+    left: calc(#{$col-date-mobile} + #{$col-rail-mobile} / 2);
+  }
 }
 
 .empty {
@@ -14,72 +40,139 @@
 }
 
 .group {
-  margin-bottom: $space-xl;
+  margin-bottom: $space-lg;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+// ── Era chapter marker ────────────────────────────────────────────────────────
+.eraRow {
+  display: grid;
+  grid-template-columns: $col-date $col-rail 1fr;
+  align-items: center;
+  position: sticky;
+  top: 60px; // below the sticky page header
+  background: $color-bg;
+  z-index: 2;
+  padding: $space-sm 0;
+  margin-bottom: $space-xs;
+
+  @media (max-width: 767px) {
+    grid-template-columns: $col-date-mobile $col-rail-mobile 1fr;
+  }
+
+  // The era row's opaque background (needed for sticky) would hide the list
+  // line — redraw it here, above the background but behind the chapter node.
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(#{$col-date} + #{$col-rail} / 2);
+    transform: translateX(-50%);
+    width: 2px;
+    background: $color-border;
+    z-index: 1;
+
+    @media (max-width: 767px) {
+      left: calc(#{$col-date-mobile} + #{$col-rail-mobile} / 2);
+    }
+  }
+}
+
+.eraNode {
+  grid-column: 2;
+  justify-self: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: $color-bg;
+  border: 2px solid $color-text-muted;
+  box-shadow: 0 0 0 4px $color-bg; // mask the line behind the chapter node
+  z-index: 2;
 }
 
 .eraHeading {
+  grid-column: 3;
   font-family: $font-serif;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: $color-text-muted;
-  margin: 0 0 $space-sm;
-  padding: $space-sm 0;
-  border-bottom: 1px solid $color-border;
-  position: sticky;
-  top: 60px; // below the sticky page header
-  background: $color-bg;
-  z-index: 1;
+  margin: 0;
 }
 
+// ── Event rows ────────────────────────────────────────────────────────────────
 .row {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: $space-md;
-  padding: $space-md 0;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  grid-template-columns: $col-date $col-rail 1fr;
+  padding: $space-sm 0;
   cursor: pointer;
-  transition: background 120ms, opacity 200ms;
-  border-radius: 4px;
+  border-radius: 6px;
+  transition: background 120ms;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.025);
-  }
+  &:hover { background: rgba(0, 0, 0, 0.025); }
 
   &.rowSelected {
     background: rgba(0, 0, 0, 0.04);
-    outline: 1.5px solid $color-accent;
-    outline-offset: -1px;
-  }
-
-  &.rowDimmed {
-    opacity: 0.22;
-    pointer-events: none;
   }
 
   @media (max-width: 767px) {
-    grid-template-columns: 72px 1fr;
-    gap: $space-sm;
-    padding: $space-sm 0;
+    grid-template-columns: $col-date-mobile $col-rail-mobile 1fr;
   }
 }
 
 .date {
+  grid-column: 1;
   font-size: 11px;
   font-family: monospace;
   color: $color-text-muted;
-  padding-top: 3px;
-  flex-shrink: 0;
   text-align: right;
   padding-right: $space-sm;
+  padding-top: 2px;
+  line-height: 1.4;
+}
+
+// The rail column hosts a dot per event; the line itself is drawn once on .list.
+.rail {
+  grid-column: 2;
+  position: relative;
+  align-self: stretch;
+}
+
+.dot {
+  position: absolute;
+  left: 50%;
+  top: 11px;
+  transform: translate(-50%, -50%);
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--dot, #b8b2aa);
+  border: 2.5px solid $color-bg;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06);
+  z-index: 1;
+  transition: transform 120ms ease;
+}
+
+.row:hover .dot {
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.rowSelected .dot {
+  transform: translate(-50%, -50%) scale(1.35);
+  // halo: dot → background gap → thin ring in the event's category colour
+  box-shadow: 0 0 0 3px $color-bg, 0 0 0 5px var(--dot);
 }
 
 .content {
+  grid-column: 3;
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  padding-left: $space-xs;
 }
 
 .title {
