@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 api/dist/
+client/dist/
 
 # MongoDB dumps
 scraper/dump/

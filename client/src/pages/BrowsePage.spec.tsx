@@ -19,7 +19,7 @@ const mockTimelines = [
   },
 ];
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => { vi.clearAllMocks(); });
 
 describe('BrowsePage', () => {
   it('renders timeline cards after loading', async () => {
