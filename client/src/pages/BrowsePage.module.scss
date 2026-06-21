@@ -37,6 +37,77 @@
   margin: 0;
 }
 
+.discoverCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: $space-md;
+  font-size: 14px;
+  font-weight: 600;
+  color: $color-surface;
+  background: $color-text;
+  border-radius: 10px;
+  padding: 10px 18px;
+  text-decoration: none;
+  transition: transform 120ms ease, background 120ms ease;
+
+  &:hover { background: $color-accent; transform: translateY(-1px); }
+  &:active { transform: translateY(0); }
+}
+
+.gridHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $space-md;
+
+  @media (max-width: $breakpoint-mobile) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-sm;
+  }
+}
+
+.gridLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: $color-text-muted;
+}
+
+.sortControls {
+  display: flex;
+  gap: 2px;
+  background: darken($color-bg, 3%);
+  border: 1px solid $color-border;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.sortBtn {
+  font-size: 11px;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: $color-text-muted;
+  cursor: pointer;
+  transition: background 120ms, color 120ms;
+  white-space: nowrap;
+
+  &:hover {
+    color: $color-text;
+  }
+
+  &.sortActive {
+    background: $color-surface;
+    color: $color-text;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

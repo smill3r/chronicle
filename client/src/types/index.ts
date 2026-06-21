@@ -7,6 +7,10 @@ export interface Timeline {
   yearEnd: number;
   categories: string[];
   sourceUrl: string;
+  tagline?: string;
+  description?: string;
+  heroImage?: string;
+  wikiLink?: string;
 }
 
 export interface HistoricalEvent {

@@ -11,6 +11,12 @@ export class TimelinesController {
     return this.timelinesService.findAll();
   }
 
+  // Declared before ':slug' so the param route doesn't swallow it.
+  @Get('discover/random')
+  discover() {
+    return this.timelinesService.discover();
+  }
+
   @Get(':slug')
   findOne(@Param('slug') slug: string) {
     return this.timelinesService.findBySlug(slug);

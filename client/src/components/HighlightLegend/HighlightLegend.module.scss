@@ -60,7 +60,12 @@
   &.active {
     border-color: $color-text;
     color: $color-text;
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.07);
+    font-weight: 600;
+
+    .dot {
+      transform: scale(1.25);
+    }
   }
 }
 
@@ -69,4 +74,5 @@
   height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
+  transition: transform 150ms;
 }

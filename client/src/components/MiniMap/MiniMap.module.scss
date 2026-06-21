@@ -22,19 +22,53 @@
   color: $color-text-muted;
 }
 
-.range {
-  font-size: 11px;
+.rangeHint {
+  font-size: 10px;
   color: $color-text-muted;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.rangeLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: monospace;
+  color: $color-accent;
+  font-weight: 600;
+}
+
+.clearRange {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid $color-accent;
+  background: transparent;
+  color: $color-accent;
+  cursor: pointer;
+  font-size: 9px;
+  padding: 0;
+  transition: background 120ms;
+
+  &:hover {
+    background: rgba($color-accent, 0.1);
+  }
 }
 
 .track {
   position: relative;
-  height: 20px;
+  height: 24px;
   background: $color-surface;
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: visible;
   margin-bottom: 4px;
   border: 1px solid $color-border;
+  cursor: col-resize;
+  user-select: none;
 }
 
 .dot {
@@ -47,15 +81,21 @@
   pointer-events: none;
 }
 
-.viewport {
+.rangeOverlay {
   position: absolute;
-  top: -2px;
-  height: calc(100% + 4px);
-  border: 1.5px solid $color-accent;
+  top: 0;
+  height: 100%;
+  background: rgba($color-accent, 0.18);
+  border: 1.5px solid rgba($color-accent, 0.55);
   border-radius: 3px;
   pointer-events: none;
-  opacity: 0.6;
-  min-width: 1%;
+  min-width: 2px;
+
+  &.rangePreviewing {
+    background: rgba($color-accent, 0.1);
+    border-color: rgba($color-accent, 0.35);
+    border-style: dashed;
+  }
 }
 
 .labels {

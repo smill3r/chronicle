@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { HistoricalEvent } from '../../types';
 import { CATEGORY_COLORS } from '../../types';
 import { api } from '../../api/client';
 import type { WikiSummary } from '../../api/client';
+import { getEraKey } from '../../utils/getEraKey';
 import styles from './EventDetailPanel.module.scss';
 
 const WIKI_BASE = 'https://en.wikipedia.org/wiki/';
@@ -12,10 +13,13 @@ type SummaryState = 'idle' | 'loading' | 'done' | 'none';
 interface Props {
   event: HistoricalEvent | null;
   slug: string;
+  span: number;
+  allEvents: HistoricalEvent[];
   onClose: () => void;
+  onSelectRelated: (ev: HistoricalEvent) => void;
 }
 
-export default function EventDetailPanel({ event, slug, onClose }: Props) {
+export default function EventDetailPanel({ event, slug, span, allEvents, onClose, onSelectRelated }: Props) {
   const [summaryState, setSummaryState] = useState<SummaryState>('idle');
   const [wikiData, setWikiData] = useState<WikiSummary | null>(null);
 
@@ -36,6 +40,14 @@ export default function EventDetailPanel({ event, slug, onClose }: Props) {
       })
       .catch(() => setSummaryState('none'));
   }, [event?._id, slug]);
+
+  const relatedEvents = useMemo(() => {
+    if (!event || allEvents.length === 0) return [];
+    const currentEra = getEraKey(event.year, span);
+    return allEvents
+      .filter((e) => e._id !== event._id && getEraKey(e.year, span) === currentEra)
+      .slice(0, 3);
+  }, [event, allEvents, span]);
 
   const isOpen = event !== null;
 
@@ -58,7 +70,6 @@ export default function EventDetailPanel({ event, slug, onClose }: Props) {
 
           <div className={styles.body}>
             <div className={styles.date}>{event.yearDisplay}</div>
-
             <h2 className={styles.title}>{event.title}</h2>
 
             <div className={styles.pills}>
@@ -83,6 +94,10 @@ export default function EventDetailPanel({ event, slug, onClose }: Props) {
               </div>
             )}
 
+            {event.description && (
+              <p className={styles.desc}>{event.description}</p>
+            )}
+
             {/* Wikipedia summary section */}
             {summaryState === 'loading' && (
               <div className={styles.wikiSection}>
@@ -103,7 +118,6 @@ export default function EventDetailPanel({ event, slug, onClose }: Props) {
                     src={wikiData.thumbnail}
                     alt=""
                     className={styles.thumbnail}
-                    loading="lazy"
                   />
                 )}
                 <p className={styles.extract}>{wikiData.summary}</p>
@@ -121,6 +135,29 @@ export default function EventDetailPanel({ event, slug, onClose }: Props) {
                 Read on Wikipedia
                 <span className="ti ti-arrow-up-right" />
               </a>
+            )}
+
+            {/* In this era */}
+            {relatedEvents.length > 0 && (
+              <div className={styles.relatedSection}>
+                <div className={styles.wikiLabel}>Also in this era</div>
+                {relatedEvents.map((rel) => (
+                  <button
+                    key={rel._id}
+                    className={styles.relatedRow}
+                    onClick={() => onSelectRelated(rel)}
+                  >
+                    <span className={styles.relatedDot}
+                      style={{ background: CATEGORY_COLORS[rel.category[0]]?.dot ?? '#ccc' }}
+                    />
+                    <span className={styles.relatedContent}>
+                      <span className={styles.relatedYear}>{rel.yearDisplay}</span>
+                      <span className={styles.relatedTitle}>{rel.title}</span>
+                    </span>
+                    <span className="ti ti-arrow-right" style={{ fontSize: 12, color: 'var(--color-text-muted)' }} />
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </>

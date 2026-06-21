@@ -25,6 +25,20 @@ export class Timeline {
 
   @Prop({ default: '' })
   sourceUrl!: string;
+
+  // "About this topic" enrichment, sourced from the root Wikidata entity + its
+  // main Wikipedia article at import time.
+  @Prop({ default: '' })
+  tagline!: string; // Wikidata one-line description
+
+  @Prop({ default: '' })
+  description!: string; // Wikipedia lead paragraph
+
+  @Prop({ default: '' })
+  heroImage!: string; // main article image URL
+
+  @Prop({ default: '' })
+  wikiLink!: string; // main article title
 }
 
 export const TimelineSchema = SchemaFactory.createForClass(Timeline);
