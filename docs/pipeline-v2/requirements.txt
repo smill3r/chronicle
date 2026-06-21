@@ -1,0 +1,33 @@
+# Chronicle Pipeline v2 — Phase 1 local stack (CPU only, no CUDA).
+# Install with: pip install -r requirements.txt
+
+# Orchestration
+dagster
+dagster-webserver
+
+# Data contracts / validation
+pydantic>=2
+pandera
+
+# Staging / analytics
+duckdb
+pyarrow
+
+# Serving store client
+pymongo
+
+# Date extraction (rule-based, CPU)
+dateparser
+spacy
+# optional, higher-quality temporal tagging but needs a JVM:
+# py-heideltime
+
+# Category classification (frozen embeddings + classical classifier, CPU)
+sentence-transformers
+scikit-learn
+
+# Local generative model client (description polish / low-confidence judge)
+ollama
+
+# spaCy English model is installed separately, CPU:
+#   python -m spacy download en_core_web_sm
